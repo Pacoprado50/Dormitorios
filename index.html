@@ -454,10 +454,10 @@
         
         <div class="main-system" id="main-system">
             <div class="tabs">
-                <button class="tab active" onclick="showTab('entrada-inicial')">🔑 Entrada Inicial</button>
-                <button class="tab" onclick="showTab('salida-intermedia')">🚪 Salida Intermedia</button>
-                <button class="tab" onclick="showTab('entrada-intermedia')">🔄 Entrada Intermedia</button>
-                <button class="tab" onclick="showTab('salida-final')">✅ Salida Final</button>
+                <button class="tab active" onclick="showTab('entrada-inicial', event)">🔑 Entrada Inicial</button>
+                <button class="tab" onclick="showTab('salida-intermedia', event)">🚪 Salida Intermedia</button>
+                <button class="tab" onclick="showTab('entrada-intermedia', event)">🔄 Entrada Intermedia</button>
+                <button class="tab" onclick="showTab('salida-final', event)">✅ Salida Final</button>
             </div>
 
             <div id="entrada-inicial" class="content active">
@@ -580,10 +580,10 @@
         <div class="admin-panel" id="admin-panel">
             <h2>🛠️ Panel de Administración</h2>
             <div class="admin-tabs">
-                <button class="admin-tab active" onclick="showAdminTab('usuarios')">👥 Gestión de Usuarios</button>
-                <button class="admin-tab" onclick="showAdminTab('operadores')">👷 Gestión de Operadores</button>
-                <button class="admin-tab" onclick="showAdminTab('habitaciones')">🏠 Gestión de Habitaciones</button>
-                <button class="admin-tab" onclick="showAdminTab('estadisticas')">📊 Estadísticas</button>
+                <button class="admin-tab active" onclick="showAdminTab('usuarios', event)">👥 Gestión de Usuarios</button>
+                <button class="admin-tab" onclick="showAdminTab('operadores', event)">👷 Gestión de Operadores</button>
+                <button class="admin-tab" onclick="showAdminTab('habitaciones', event)">🏠 Gestión de Habitaciones</button>
+                <button class="admin-tab" onclick="showAdminTab('estadisticas', event)">📊 Estadísticas</button>
             </div>
             
             <div class="success-message" id="success-admin"></div>
@@ -680,9 +680,9 @@
         const firebaseConfig = {
             apiKey: "TU_API_KEY",
             authDomain: "TU_AUTH_DOMAIN",
-            databaseURL: "TU_DATABASE_URL",
+            databaseURL: "https://TU_PROJECT_ID-default-rtdb.firebaseio.com",
             projectId: "TU_PROJECT_ID",
-            storageBucket: "TU_STORAGE_BUCKET",
+            storageBucket: "TU_PROJECT_ID.appspot.com",
             messagingSenderId: "TU_MESSAGING_SENDER_ID",
             appId: "TU_APP_ID"
         };
@@ -751,8 +751,10 @@
                         hideAllScreens();
                         if (currentUserType === 'admin') {
                             document.getElementById('admin-panel').style.display = 'block';
+                            showAdminTab('usuarios'); // CORRECCIÓN: Mostrar la primera pestaña por defecto
                         } else {
                             document.getElementById('main-system').style.display = 'block';
+                            showTab('entrada-inicial'); // CORRECCIÓN: Mostrar la primera pestaña por defecto
                         }
                     } else {
                         auth.signOut(); // Desloguear si el tipo no es correcto
@@ -778,12 +780,15 @@
                 errorEl.textContent = message;
                 errorEl.style.display = 'block';
                 successEl.style.display = 'none';
+                setTimeout(() => errorEl.style.display = 'none', 5000);
             }
         }
         
         function hideMessage(context) {
-             document.getElementById(`success-${context}`).style.display = 'none';
-             document.getElementById(`error-${context}`).style.display = 'none';
+             const successEl = document.getElementById(`success-${context}`);
+             const errorEl = document.getElementById(`error-${context}`);
+             if(successEl) successEl.style.display = 'none';
+             if(errorEl) errorEl.style.display = 'none';
         }
 
 
@@ -810,20 +815,24 @@
         
         // --- FUNCIONALIDAD DEL PANEL DE REGISTRO ---
 
-        function showTab(tabId) {
-            // Ocultar todos los contenidos y desactivar todos los tabs
+        function showTab(tabId, event) {
             document.querySelectorAll('.main-system .content').forEach(c => c.classList.remove('active'));
             document.querySelectorAll('.main-system .tab').forEach(t => t.classList.remove('active'));
-            // Mostrar el contenido y activar el tab seleccionado
             document.getElementById(tabId).classList.add('active');
-            event.currentTarget.classList.add('active');
+            // CORRECCIÓN: Activar el tab correcto
+            if (event) {
+                event.currentTarget.classList.add('active');
+            } else {
+                document.querySelector(`.main-system .tab[onclick*="'${tabId}'"]`).classList.add('active');
+            }
         }
 
         // --- LÓGICA DE ENTRADA INICIAL ---
         
         const claveEntradaInput = document.getElementById('clave-entrada');
         claveEntradaInput.addEventListener('blur', () => {
-            const clave = claveEntradaInput.value.trim();
+            const clave = claveEntradaInput.value.trim().toUpperCase();
+            claveEntradaInput.value = clave;
             const infoDiv = document.getElementById('info-entrada');
             const nombreP = document.getElementById('nombre-entrada');
             if (operadoresData[clave]) {
@@ -847,7 +856,7 @@
                 const bedsDiv = document.createElement('div');
                 bedsDiv.classList.add('room-beds');
 
-                let allAvailable = true;
+                let isAnyAvailable = false;
                 Object.keys(hab.camas).sort().forEach(numCama => {
                     const cama = hab.camas[numCama];
                     const bedSpan = document.createElement('span');
@@ -855,16 +864,18 @@
                     bedSpan.classList.add(cama.estado === 'ocupada' ? 'occupied' : 'available');
                     bedSpan.textContent = numCama;
                     bedsDiv.appendChild(bedSpan);
-                    if (cama.estado === 'ocupada') allAvailable = false;
+                    if (cama.estado === 'disponible') isAnyAvailable = true;
                 });
                 roomDiv.appendChild(bedsDiv);
-                roomDiv.classList.add(allAvailable ? 'available' : 'occupied');
+                roomDiv.classList.toggle('available', isAnyAvailable);
                 grid.appendChild(roomDiv);
             });
         }
 
+
         function poblarHabitacionesDisponibles(habitaciones) {
             const selectHab = document.getElementById('habitacion-entrada');
+            const currentVal = selectHab.value;
             selectHab.innerHTML = '<option value="">Seleccionar habitación</option>';
             Object.keys(habitaciones).forEach(numHab => {
                 const camasDisponibles = Object.values(habitaciones[numHab].camas).some(c => c.estado === 'disponible');
@@ -872,12 +883,13 @@
                     selectHab.innerHTML += `<option value="${numHab}">${numHab}</option>`;
                 }
             });
+            selectHab.value = currentVal;
 
             selectHab.onchange = () => {
                 const selectCama = document.getElementById('cama-entrada');
                 selectCama.innerHTML = '<option value="">Seleccionar cama</option>';
                 const numHabSeleccionada = selectHab.value;
-                if (numHabSeleccionada) {
+                if (numHabSeleccionada && habitaciones[numHabSeleccionada]) {
                     const camas = habitaciones[numHabSeleccionada].camas;
                     Object.keys(camas).forEach(numCama => {
                         if (camas[numCama].estado === 'disponible') {
@@ -894,7 +906,16 @@
             const habitacion = document.getElementById('habitacion-entrada').value;
             const cama = document.getElementById('cama-entrada').value;
 
-            // Validar que el operador no tenga ya una estancia activa
+            if (!operadoresData[clave]) {
+                showMessage('error', 'La clave de operador no es válida.', 'entrada-inicial');
+                return;
+            }
+
+            if (!habitacion || !cama) {
+                showMessage('error', 'Debe seleccionar una habitación y una cama.', 'entrada-inicial');
+                return;
+            }
+
             db.ref('estancias').orderByChild('claveOperador').equalTo(clave).once('value', snapshot => {
                 let estanciaActiva = false;
                 snapshot.forEach(childSnapshot => {
@@ -908,7 +929,6 @@
                     return;
                 }
                 
-                // Si no hay estancia activa, proceder con el registro
                 const nuevaEstancia = {
                     claveOperador: clave,
                     nombreOperador: operadoresData[clave]?.nombre || 'N/A',
@@ -938,14 +958,14 @@
 
         // --- LÓGICA SALIDAS Y ENTRADAS INTERMEDIAS Y FINAL ---
         
-        // Función genérica para buscar estancia activa y mostrar info del operador
         function buscarOperadorActivo(inputId, infoDivId, nombrePId, context) {
             const input = document.getElementById(inputId);
             input.addEventListener('blur', () => {
-                const clave = input.value.trim();
+                const clave = input.value.trim().toUpperCase();
+                input.value = clave;
                 const infoDiv = document.getElementById(infoDivId);
                 const nombreP = document.getElementById(nombrePId);
-                const habitacionP = document.getElementById('habitacion-salida-final'); // Específico para salida final
+                const habitacionP = document.getElementById('habitacion-salida-final');
                 infoDiv.style.display = 'none';
                 hideMessage(context);
 
@@ -953,15 +973,17 @@
 
                 db.ref('estancias').orderByChild('claveOperador').equalTo(clave).once('value', snapshot => {
                     let estanciaEncontrada = null;
-                    snapshot.forEach(child => {
-                        if (child.val().estado === 'activa') {
-                            estanciaEncontrada = child.val();
-                            estanciaEncontrada.id = child.key;
-                        }
-                    });
+                    if(snapshot.exists()) {
+                        snapshot.forEach(child => {
+                            if (child.val().estado === 'activa') {
+                                estanciaEncontrada = child.val();
+                                estanciaEncontrada.id = child.key;
+                            }
+                        });
+                    }
 
                     if (estanciaEncontrada) {
-                        infoDiv.dataset.estanciaId = estanciaEncontrada.id; // Guardar ID para usarlo en el submit
+                        infoDiv.dataset.estanciaId = estanciaEncontrada.id;
                         nombreP.textContent = `Nombre: ${estanciaEncontrada.nombreOperador}`;
                         if(habitacionP) habitacionP.textContent = `Ocupando: Hab. ${estanciaEncontrada.habitacion} - Cama ${estanciaEncontrada.cama}`;
                         infoDiv.style.display = 'block';
@@ -976,7 +998,6 @@
         buscarOperadorActivo('clave-entrada-int', 'info-entrada-int', 'nombre-entrada-int', 'entrada-intermedia');
         buscarOperadorActivo('clave-salida-final', 'info-salida-final', 'nombre-salida-final', 'salida-final');
 
-        // Salida Intermedia Submit
         document.getElementById('form-salida-intermedia').addEventListener('submit', function(e) {
             e.preventDefault();
             const estanciaId = document.getElementById('info-salida-int').dataset.estanciaId;
@@ -994,11 +1015,11 @@
                      showMessage('success', 'Salida intermedia registrada.', 'salida-intermedia');
                      this.reset();
                      document.getElementById('info-salida-int').style.display = 'none';
+                     delete document.getElementById('info-salida-int').dataset.estanciaId;
                 })
                 .catch(error => showMessage('error', `Error: ${error.message}`, 'salida-intermedia'));
         });
         
-        // Entrada Intermedia Submit
         document.getElementById('form-entrada-intermedia').addEventListener('submit', function(e) {
             e.preventDefault();
             const estanciaId = document.getElementById('info-entrada-int').dataset.estanciaId;
@@ -1016,11 +1037,11 @@
                      showMessage('success', 'Entrada intermedia registrada.', 'entrada-intermedia');
                      this.reset();
                      document.getElementById('info-entrada-int').style.display = 'none';
+                     delete document.getElementById('info-entrada-int').dataset.estanciaId;
                 })
                 .catch(error => showMessage('error', `Error: ${error.message}`, 'entrada-intermedia'));
         });
 
-        // Salida Final Submit
         document.getElementById('form-salida-final').addEventListener('submit', function(e) {
             e.preventDefault();
             const estanciaId = document.getElementById('info-salida-final').dataset.estanciaId;
@@ -1044,6 +1065,7 @@
                         showMessage('success', 'Salida final registrada. La cama ha sido liberada.', 'salida-final');
                         this.reset();
                         document.getElementById('info-salida-final').style.display = 'none';
+                        delete document.getElementById('info-salida-final').dataset.estanciaId;
                     })
                     .catch(error => showMessage('error', `Error: ${error.message}`, 'salida-final'));
             });
@@ -1052,23 +1074,28 @@
         
         // --- FUNCIONALIDAD DEL PANEL DE ADMINISTRADOR ---
 
-        function showAdminTab(tabId) {
+        function showAdminTab(tabId, event) {
             document.querySelectorAll('.admin-section').forEach(s => s.style.display = 'none');
             document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
             document.getElementById(`admin-${tabId}`).style.display = 'block';
-            event.currentTarget.classList.add('active');
+            // CORRECCIÓN: Activar el tab correcto
+            if(event) {
+                event.currentTarget.classList.add('active');
+            } else {
+                 document.querySelector(`.admin-tab[onclick*="'${tabId}'"]`).classList.add('active');
+            }
             hideMessage('admin');
         }
 
-        // Gestión de Usuarios
         document.getElementById('form-crear-usuario').addEventListener('submit', function(e) {
             e.preventDefault();
             const email = document.getElementById('nuevo-email').value;
             const password = document.getElementById('nueva-password').value;
             const tipo = document.getElementById('tipo-usuario').value;
 
-            // Se crea un segundo app de Firebase para no desloguear al admin actual
-            const secondaryApp = firebase.initializeApp(firebaseConfig, "secondary");
+            // Se usa una segunda app de Firebase para crear usuarios sin desloguear al admin
+            const appName = "secondary-" + new Date().getTime();
+            const secondaryApp = firebase.initializeApp(firebaseConfig, appName);
             
             secondaryApp.auth().createUserWithEmailAndPassword(email, password)
                 .then(userCredential => {
@@ -1078,42 +1105,47 @@
                 .then(() => {
                     showMessage('success', 'Usuario creado exitosamente.', 'admin');
                     this.reset();
-                    secondaryApp.auth().signOut(); // Se cierra sesión en la app secundaria
+                    return secondaryApp.delete();
                 })
                 .catch(error => {
                     showMessage('error', `Error: ${error.message}`, 'admin');
-                    secondaryApp.auth().signOut();
+                    secondaryApp.delete();
                 });
         });
         
         db.ref('usuarios').on('value', snapshot => {
             const lista = document.getElementById('lista-usuarios');
             lista.innerHTML = '';
-            snapshot.forEach(child => {
-                const user = child.val();
-                const uid = child.key;
-                lista.innerHTML += `
-                    <div class="list-item" id="user-${uid}">
-                        <span>${user.email} (${user.tipo})</span>
-                        <button class="btn-delete" onclick="borrarUsuario('${uid}')">Borrar</button>
-                    </div>`;
-            });
+            if (snapshot.exists()) {
+                snapshot.forEach(child => {
+                    const user = child.val();
+                    const uid = child.key;
+                    lista.innerHTML += `
+                        <div class="list-item" id="user-${uid}">
+                            <span>${user.email} (${user.tipo})</span>
+                            <button class="btn-delete" onclick="borrarUsuario('${uid}', '${user.email}')">Borrar</button>
+                        </div>`;
+                });
+            }
         });
         
-        function borrarUsuario(uid) {
-             if (confirm('¿Está seguro de que desea borrar este usuario? Esta acción no se puede deshacer.')) {
+        function borrarUsuario(uid, email) {
+             if (auth.currentUser && email === auth.currentUser.email) {
+                 showMessage('error', 'No puede borrar su propio usuario.', 'admin');
+                 return;
+             }
+             if (confirm(`¿Está seguro de que desea borrar al usuario ${email}? Esta acción quitará su acceso y no se puede deshacer.`)) {
                  // Nota: Borrar usuarios de Auth requiere un backend (Cloud Functions) por seguridad.
-                 // Aquí solo lo borraremos de la Realtime Database.
+                 // Esta función solo lo borrará de la Realtime Database para quitarle el acceso.
                  db.ref('usuarios/' + uid).remove()
-                    .then(() => showMessage('success', 'Usuario borrado de la base de datos.', 'admin'))
+                    .then(() => showMessage('success', 'Usuario borrado de la base de datos. El usuario ya no podrá iniciar sesión.', 'admin'))
                     .catch(error => showMessage('error', error.message, 'admin'));
              }
         }
 
-        // Gestión de Operadores
         document.getElementById('form-operador').addEventListener('submit', function(e) {
             e.preventDefault();
-            const clave = document.getElementById('clave-operador').value.trim();
+            const clave = document.getElementById('clave-operador').value.trim().toUpperCase();
             const nombre = document.getElementById('nombre-operador').value.trim();
             db.ref('operadores/' + clave).set({ nombre: nombre })
                 .then(() => {
@@ -1126,16 +1158,19 @@
         db.ref('operadores').on('value', snapshot => {
             const lista = document.getElementById('lista-operadores');
             lista.innerHTML = '';
-            snapshot.forEach(child => {
-                const op = child.val();
-                const clave = child.key;
-                lista.innerHTML += `
-                    <div class="list-item">
-                        <span>${clave}: ${op.nombre}</span>
-                        <button class="btn-delete" onclick="borrarOperador('${clave}')">Borrar</button>
-                    </div>`;
-            });
+            if (snapshot.exists()){
+                snapshot.forEach(child => {
+                    const op = child.val();
+                    const clave = child.key;
+                    lista.innerHTML += `
+                        <div class="list-item">
+                            <span>${clave}: ${op.nombre}</span>
+                            <button class="btn-delete" onclick="borrarOperador('${clave}')">Borrar</button>
+                        </div>`;
+                });
+            }
         });
+
         function borrarOperador(clave){
             if (confirm('¿Seguro que desea borrar este operador?')) {
                 db.ref('operadores/' + clave).remove()
@@ -1144,10 +1179,9 @@
             }
         }
 
-        // Gestión de Habitaciones
         document.getElementById('form-habitacion').addEventListener('submit', function(e) {
             e.preventDefault();
-            const numHab = document.getElementById('numero-habitacion').value.trim();
+            const numHab = document.getElementById('numero-habitacion').value.trim().toUpperCase();
             const numCamas = parseInt(document.getElementById('numero-camas').value);
             const camas = {};
             for(let i = 1; i <= numCamas; i++) {
@@ -1164,16 +1198,19 @@
         db.ref('habitaciones').on('value', snapshot => {
             const lista = document.getElementById('lista-habitaciones');
             lista.innerHTML = '';
-            snapshot.forEach(child => {
-                const hab = child.val();
-                const numHab = child.key;
-                lista.innerHTML += `
-                    <div class="list-item">
-                        <span>Hab. ${numHab} (${hab.numeroCamas} camas)</span>
-                        <button class="btn-delete" onclick="borrarHabitacion('${numHab}')">Borrar</button>
-                    </div>`;
-            });
+            if (snapshot.exists()) {
+                snapshot.forEach(child => {
+                    const hab = child.val();
+                    const numHab = child.key;
+                    lista.innerHTML += `
+                        <div class="list-item">
+                            <span>Hab. ${numHab} (${hab.numeroCamas} camas)</span>
+                            <button class="btn-delete" onclick="borrarHabitacion('${numHab}')">Borrar</button>
+                        </div>`;
+                });
+            }
         });
+
         function borrarHabitacion(numHab){
             if (confirm('¿Seguro que desea borrar esta habitación?')) {
                  db.ref('habitaciones/' + numHab).remove()
@@ -1182,7 +1219,6 @@
             }
         }
         
-        // Estadísticas
         function generarEstadisticas() {
             const resultadosDiv = document.getElementById('resultados-estadisticas');
             resultadosDiv.innerHTML = 'Generando reporte...';
@@ -1213,13 +1249,11 @@
                     estanciasSnapshot.forEach(child => {
                         const estancia = child.val();
                         
-                        // Filtrar por operador si se seleccionó uno
                         if(claveOperador && estancia.claveOperador !== claveOperador) return;
 
                         const entradaMs = new Date(estancia.fechaHoraEntradaInicial).getTime();
                         const salidaMs = estancia.fechaHoraSalidaFinal ? new Date(estancia.fechaHoraSalidaFinal).getTime() : finMs;
 
-                        // Verificar si la estancia se solapa con el rango de fechas
                         if (entradaMs < finMs && salidaMs > inicioMs) {
                             estanciasFiltradas.push(estancia);
                             
@@ -1227,7 +1261,7 @@
                             const finCalculo = Math.min(salidaMs, finMs);
                             const horasOcupadas = (finCalculo - inicioCalculo) / (1000 * 60 * 60);
                             
-                            horasOcupadasTotales += horasOcupadas;
+                            if(horasOcupadas > 0) horasOcupadasTotales += horasOcupadas;
                         }
                     });
                     
@@ -1242,7 +1276,7 @@
                         <h5>Estancias en el periodo (${estanciasFiltradas.length}):</h5>
                     `;
                     if (estanciasFiltradas.length > 0) {
-                        htmlResultados += '<ul>';
+                        htmlResultados += '<ul style="list-style-position: inside;">';
                         estanciasFiltradas.forEach(e => {
                            htmlResultados += `<li>Operador ${e.claveOperador} en Hab. ${e.habitacion} (Cama ${e.cama}) desde ${new Date(e.fechaHoraEntradaInicial).toLocaleString()} hasta ${e.fechaHoraSalidaFinal ? new Date(e.fechaHoraSalidaFinal).toLocaleString() : 'ACTUAL'}</li>`;
                         });
