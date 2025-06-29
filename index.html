@@ -8,397 +8,81 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        /* --- ESTILOS CSS (Sin cambios, se mantiene el estilo original) --- */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-            overflow: hidden;
-        }
-
-        .header {
-            background: linear-gradient(135deg, #2c3e50, #3498db);
-            color: white;
-            padding: 30px;
-            text-align: center;
-            position: relative;
-        }
-
-        .header h1 {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-        }
-
-        .user-info {
-            position: absolute;
-            top: 20px;
-            right: 30px;
-            background: rgba(255,255,255,0.1);
-            padding: 10px 15px;
-            border-radius: 20px;
-            font-size: 0.9rem;
-        }
-
-        .logout-btn {
-            background: rgba(255,255,255,0.2);
-            border: none;
-            color: white;
-            padding: 5px 10px;
-            border-radius: 15px;
-            cursor: pointer;
-            margin-left: 10px;
-            transition: all 0.3s ease;
-        }
-
-        .logout-btn:hover {
-            background: rgba(255,255,255,0.3);
-        }
-
-        .initial-screen {
-            text-align: center;
-            padding: 80px 40px;
-        }
-
-        .initial-screen h2 {
-            font-size: 2rem;
-            color: #2c3e50;
-            margin-bottom: 20px;
-        }
-
-        .initial-screen p {
-            font-size: 1.2rem;
-            color: #7f8c8d;
-            margin-bottom: 40px;
-        }
-
-        .access-buttons {
-            display: flex;
-            gap: 30px;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-
-        .access-btn {
-            background: linear-gradient(135deg, #3498db, #2980b9);
-            color: white;
-            padding: 25px 40px;
-            border: none;
-            border-radius: 15px;
-            font-size: 1.2rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            min-width: 200px;
-        }
-
-        .access-btn:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 30px rgba(52,152,219,0.3);
-        }
-
-        .access-btn.admin {
-            background: linear-gradient(135deg, #e74c3c, #c0392b);
-        }
-
-        .access-btn.admin:hover {
-            box-shadow: 0 15px 30px rgba(231,76,60,0.3);
-        }
-
-        .login-screen, .main-system, .admin-panel {
-            display: none;
-            padding: 40px;
-        }
-
-        .login-form {
-            max-width: 400px;
-            margin: 0 auto;
-            background: #f8f9fa;
-            padding: 40px;
-            border-radius: 15px;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-        }
-
-        .login-form h3 {
-            text-align: center;
-            color: #2c3e50;
-            margin-bottom: 30px;
-            font-size: 1.5rem;
-        }
-        
-        .tabs {
-            display: flex;
-            background: #f8f9fa;
-            border-bottom: 3px solid #e9ecef;
-        }
-        
-        .tab {
-            flex: 1;
-            padding: 20px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-weight: 600;
-            border: none;
-            background: none;
-            color: #495057;
-        }
-        
-        .tab:hover {
-            background: #e9ecef;
-            transform: translateY(-2px);
-        }
-        
-        .tab.active {
-            background: #007bff;
-            color: white;
-            box-shadow: inset 0 -3px 0 #0056b3;
-        }
-
-        .content {
-            display: none;
-            padding: 40px 0;
-            animation: fadeIn 0.5s ease-in;
-        }
-
-        .content.active {
-            display: block;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .form-group {
-            margin-bottom: 25px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: #2c3e50;
-            font-size: 1.1rem;
-        }
-
-        .form-group input, .form-group select, .form-group textarea {
-            width: 100%;
-            padding: 15px;
-            border: 2px solid #e9ecef;
-            border-radius: 10px;
-            font-size: 1rem;
-            transition: all 0.3s ease;
-            background: #f8f9fa;
-        }
-        
-        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
-            outline: none;
-            border-color: #007bff;
-            background: white;
-            box-shadow: 0 0 0 3px rgba(0,123,255,0.1);
-        }
-
-        .checkbox-group {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-top: 10px;
-            margin-bottom: 20px;
-        }
-        
-        .checkbox-group input[type="checkbox"] {
-            width: auto;
-            transform: scale(1.5);
-        }
-
-        .btn-submit {
-            background: linear-gradient(135deg, #28a745, #20c997);
-            color: white;
-            padding: 15px 30px;
-            border: none;
-            border-radius: 10px;
-            font-size: 1.1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            width: 100%;
-            margin-top: 20px;
-        }
-        
-        .btn-submit:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(40,167,69,0.3);
-        }
-        
-        .btn-back {
-            background: #6c757d;
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            margin-bottom: 20px;
-        }
-        
-        .btn-back:hover {
-            background: #5a6268;
-        }
-        
-        .operator-info {
-            background: #e8f4fd;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            border: 1px solid #bee5eb;
-        }
-        
-        .success-message, .error-message {
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            border: 1px solid;
-            display: none;
-        }
-        
-        .success-message {
-            background: #d4edda;
-            color: #155724;
-            border-color: #c3e6cb;
-        }
-        
-        .error-message {
-            background: #f8d7da;
-            color: #721c24;
-            border-color: #f5c6cb;
-        }
-
-        .form-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-        }
-        
-        .occupancy-map {
-            background: #f8f9fa;
-            border-radius: 10px;
-            padding: 20px;
-            margin-top: 20px;
-        }
-        
-        .occupancy-map h4 {
-            color: #2c3e50;
-            margin-bottom: 15px;
-        }
-        
-        .rooms-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 15px;
-        }
-        
-        .room {
-            background: white;
-            border-radius: 8px;
-            padding: 15px;
-            text-align: center;
-            border: 2px solid #e9ecef;
-            transition: all 0.3s ease;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; }
+        .container { max-width: 1400px; margin: 0 auto; background: white; border-radius: 15px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); overflow: hidden; }
+        .header { background: linear-gradient(135deg, #2c3e50, #3498db); color: white; padding: 30px; text-align: center; position: relative; }
+        .header h1 { font-size: 2.5rem; margin-bottom: 10px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
+        .user-info { position: absolute; top: 20px; right: 30px; background: rgba(255,255,255,0.1); padding: 10px 15px; border-radius: 20px; font-size: 0.9rem; }
+        .logout-btn { background: rgba(255,255,255,0.2); border: none; color: white; padding: 5px 10px; border-radius: 15px; cursor: pointer; margin-left: 10px; transition: all 0.3s ease; }
+        .logout-btn:hover { background: rgba(255,255,255,0.3); }
+        .initial-screen { text-align: center; padding: 80px 40px; }
+        .initial-screen h2 { font-size: 2rem; color: #2c3e50; margin-bottom: 20px; }
+        .initial-screen p { font-size: 1.2rem; color: #7f8c8d; margin-bottom: 40px; }
+        .access-buttons { display: flex; gap: 30px; justify-content: center; flex-wrap: wrap; }
+        .access-btn { background: linear-gradient(135deg, #3498db, #2980b9); color: white; padding: 25px 40px; border: none; border-radius: 15px; font-size: 1.2rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease; min-width: 200px; }
+        .access-btn:hover { transform: translateY(-5px); box-shadow: 0 15px 30px rgba(52,152,219,0.3); }
+        .access-btn.admin { background: linear-gradient(135deg, #e74c3c, #c0392b); }
+        .access-btn.admin:hover { box-shadow: 0 15px 30px rgba(231,76,60,0.3); }
+        .login-screen, .main-system, .admin-panel { display: none; padding: 40px; }
+        .login-form { max-width: 400px; margin: 0 auto; background: #f8f9fa; padding: 40px; border-radius: 15px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+        .login-form h3 { text-align: center; color: #2c3e50; margin-bottom: 30px; font-size: 1.5rem; }
+        .tabs { display: flex; background: #f8f9fa; border-bottom: 3px solid #e9ecef; }
+        .tab { flex: 1; padding: 20px; text-align: center; cursor: pointer; transition: all 0.3s ease; font-weight: 600; border: none; background: none; color: #495057; }
+        .tab:hover { background: #e9ecef; transform: translateY(-2px); }
+        .tab.active { background: #007bff; color: white; box-shadow: inset 0 -3px 0 #0056b3; }
+        .content { display: none; padding: 40px 0; animation: fadeIn 0.5s ease-in; }
+        .content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .form-group { margin-bottom: 25px; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: 600; color: #2c3e50; font-size: 1.1rem; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 15px; border: 2px solid #e9ecef; border-radius: 10px; font-size: 1rem; transition: all 0.3s ease; background: #f8f9fa; }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: #007bff; background: white; box-shadow: 0 0 0 3px rgba(0,123,255,0.1); }
+        .checkbox-group { display: flex; align-items: center; gap: 10px; margin-top: 10px; margin-bottom: 20px; }
+        .checkbox-group input[type="checkbox"] { width: auto; transform: scale(1.5); }
+        .btn-submit, .btn-query, .btn-import { background: linear-gradient(135deg, #28a745, #20c997); color: white; padding: 15px 30px; border: none; border-radius: 10px; font-size: 1.1rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease; width: 100%; margin-top: 20px; }
+        .btn-submit:hover, .btn-query:hover, .btn-import:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(40,167,69,0.3); }
+        .btn-query { background: linear-gradient(135deg, #17a2b8, #1f95a8); }
+        .btn-query:hover { box-shadow: 0 10px 20px rgba(23,162,184,0.3); }
+        .btn-import { background: linear-gradient(135deg, #6610f2, #6f42c1); }
+        .btn-import:hover { box-shadow: 0 10px 20px rgba(102,16,242,0.3); }
+        .btn-back { background: #6c757d; color: white; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; margin-bottom: 20px; }
+        .btn-back:hover { background: #5a6268; }
+        .operator-info { background: #e8f4fd; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #bee5eb; }
+        .operator-info p { margin: 5px 0; font-weight: 600; }
+        .success-message, .error-message { padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid; display: none; }
+        .success-message { background: #d4edda; color: #155724; border-color: #c3e6cb; }
+        .error-message { background: #f8d7da; color: #721c24; border-color: #f5c6cb; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .occupancy-map { background: #f8f9fa; border-radius: 10px; padding: 20px; margin-top: 20px; }
+        .occupancy-map h4 { color: #2c3e50; margin-bottom: 15px; }
+        .rooms-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; }
+        .room { background: white; border-radius: 8px; padding: 15px; text-align: center; border: 2px solid #e9ecef; transition: all 0.3s ease; }
         .room h5 { margin-bottom: 10px; color: #343a40;}
         .room-beds { display: flex; flex-wrap: wrap; justify-content: center; gap: 5px; }
-        
-        .room.occupied {
-            border-color: #dc3545;
-            background: #fff5f5;
-        }
-        
-        .room.available {
-            border-color: #28a745;
-            background: #f8fff9;
-        }
-        
-        .bed {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 35px;
-            height: 25px;
-            margin: 2px;
-            border-radius: 3px;
-            font-size: 0.8rem;
-            color: white;
-            font-weight: bold;
-        }
-        
+        .bed { display: flex; align-items: center; justify-content: center; width: 35px; height: 25px; margin: 2px; border-radius: 3px; font-size: 0.8rem; color: white; font-weight: bold; }
         .bed.occupied { background: #dc3545; }
         .bed.available { background: #28a745; }
-        
-        .admin-section {
-            background: #f8f9fa;
-            border-radius: 10px;
-            padding: 30px;
-            margin-bottom: 20px;
-        }
-        
-        .admin-tabs {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
-        
-        .admin-tab {
-            background: #6c757d;
-            color: white;
-            padding: 10px 15px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        
+        .bed.on-leave { background: #ffc107; } 
+        .admin-section, .query-section { background: #f8f9fa; border-radius: 10px; padding: 30px; margin-bottom: 20px; }
+        .admin-section.active { display: block; }
+        .admin-tabs { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+        .admin-tab { background: #6c757d; color: white; padding: 10px 15px; border: none; border-radius: 8px; cursor: pointer; transition: all 0.3s ease; }
         .admin-tab:hover { background: #5a6268; }
         .admin-tab.active { background: #007bff; }
-        
-        .statistics-filters {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-
-        #lista-usuarios, #lista-operadores, #lista-habitaciones { margin-top: 20px; }
-        .list-item {
-             background: #fff; padding: 15px; border-radius: 8px;
-             margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;
-             box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-        }
+        .filters-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+        #lista-usuarios, #lista-operadores, #lista-habitaciones, .query-results { margin-top: 20px; }
+        .list-item { background: #fff; padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .btn-delete { background: #dc3545; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; }
-
-        @media (max-width: 768px) {
-            .tabs { flex-direction: column; }
-            .form-row { grid-template-columns: 1fr; }
-            .header h1 { font-size: 1.8rem; }
-            .access-buttons { flex-direction: column; align-items: center; }
-            .user-info { position: static; margin-top: 20px; text-align: center; }
-        }
+        .query-results table { width: 100%; border-collapse: collapse; overflow-x: auto; display: block; }
+        .query-results th, .query-results td { padding: 12px; border: 1px solid #ddd; text-align: left; white-space: nowrap; }
+        .query-results th { background-color: #e9ecef; }
+        .query-results tr:nth-child(even) { background-color: #f8f9fa; }
+        hr { border: 1px solid #f0f0f0; margin: 30px 0; }
+        @media (max-width: 768px) { .tabs { flex-direction: column; } .form-row, .filters-grid { grid-template-columns: 1fr; } .header h1 { font-size: 1.8rem; } .access-buttons { flex-direction: column; align-items: center; } .user-info { position: static; margin-top: 20px; text-align: center; } }
     </style>
 </head>
 <body>
@@ -438,13 +122,13 @@
                 <form id="form-login">
                     <div class="form-group">
                         <label for="email"><i class="fas fa-envelope"></i> Correo:</label>
-                        <input type="email" id="email" required>
+                        <input type="email" id="email" autocomplete="email" required>
                     </div>
                     <div class="form-group">
                         <label for="password"><i class="fas fa-key"></i> Contraseña:</label>
-                        <input type="password" id="password" required>
+                        <input type="password" id="password" autocomplete="current-password" required>
                     </div>
-                     <div class="error-message" id="error-login"></div>
+                    <div class="error-message" id="error-login"></div>
                     <button type="submit" class="btn-submit">
                         <i class="fas fa-sign-in-alt"></i> Iniciar Sesión
                     </button>
@@ -454,133 +138,21 @@
         
         <div class="main-system" id="main-system">
             <div class="tabs">
-                <button class="tab active" onclick="showTab('entrada-inicial', event)">🔑 Entrada Inicial</button>
+                <button class="tab" onclick="showTab('entrada-inicial', event)">🔑 Entrada Inicial</button>
                 <button class="tab" onclick="showTab('salida-intermedia', event)">🚪 Salida Intermedia</button>
                 <button class="tab" onclick="showTab('entrada-intermedia', event)">🔄 Entrada Intermedia</button>
                 <button class="tab" onclick="showTab('salida-final', event)">✅ Salida Final</button>
             </div>
-
-            <div id="entrada-inicial" class="content active">
-                <h2>🔑 Entrada Inicial al Dormitorio</h2>
-                <div class="success-message" id="success-entrada-inicial"></div>
-                <div class="error-message" id="error-entrada-inicial"></div>
-                <form id="form-entrada-inicial">
-                    <div class="form-group">
-                        <label for="clave-entrada">Clave del Operador:</label>
-                        <input type="text" id="clave-entrada" required>
-                    </div>
-                    <div class="operator-info" id="info-entrada" style="display: none;">
-                        <p id="nombre-entrada"></p>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="habitacion-entrada">Habitación:</label>
-                            <select id="habitacion-entrada" required><option value="">Seleccione habitación</option></select>
-                        </div>
-                        <div class="form-group">
-                            <label for="cama-entrada">Cama:</label>
-                            <select id="cama-entrada" required><option value="">Seleccione cama</option></select>
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="hora-turno">Hora de Turno:</label>
-                            <input type="time" id="hora-turno" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="hora-levantado">Hora para ser Levantado:</label>
-                            <input type="time" id="hora-levantado" required>
-                        </div>
-                    </div>
-                    <div class="checkbox-group">
-                        <input type="checkbox" id="licencia-retenida" required>
-                        <label for="licencia-retenida">Licencia retenida</label>
-                    </div>
-                    <button type="submit" class="btn-submit">Registrar Entrada</button>
-                </form>
-                <div class="occupancy-map">
-                    <h4>📊 Esquema de Ocupación</h4>
-                    <div class="rooms-grid" id="rooms-grid"></div>
-                </div>
-            </div>
-
-            <div id="salida-intermedia" class="content">
-                <h2>🚪 Salida Intermedia</h2>
-                <div class="success-message" id="success-salida-intermedia"></div>
-                <div class="error-message" id="error-salida-intermedia"></div>
-                <form id="form-salida-intermedia">
-                    <div class="form-group">
-                        <label for="clave-salida-int">Clave del Operador:</label>
-                        <input type="text" id="clave-salida-int" required>
-                    </div>
-                    <div class="operator-info" id="info-salida-int" style="display: none;">
-                         <p id="nombre-salida-int"></p>
-                    </div>
-                    <div class="form-group">
-                        <label for="motivo-salida">Motivo de Salida:</label>
-                        <select id="motivo-salida" required>
-                            <option value="">Seleccionar motivo</option>
-                            <option value="comida">Comida</option>
-                            <option value="emergencia">Emergencia</option>
-                            <option value="personal">Asunto Personal</option>
-                            <option value="trabajo">Trabajo</option>
-                            <option value="otros">Otros</option>
-                        </select>
-                    </div>
-                    <button type="submit" class="btn-submit">Registrar Salida</button>
-                </form>
-            </div>
-
-            <div id="entrada-intermedia" class="content">
-                 <h2>🔄 Entrada Intermedia</h2>
-                <div class="success-message" id="success-entrada-intermedia"></div>
-                <div class="error-message" id="error-entrada-intermedia"></div>
-                <form id="form-entrada-intermedia">
-                     <div class="form-group">
-                        <label for="clave-entrada-int">Clave del Operador:</label>
-                        <input type="text" id="clave-entrada-int" required>
-                    </div>
-                    <div class="operator-info" id="info-entrada-int" style="display: none;">
-                        <p id="nombre-entrada-int"></p>
-                    </div>
-                    <div class="form-group">
-                        <label for="observaciones-entrada-int">Observaciones:</label>
-                        <textarea id="observaciones-entrada-int" rows="4" placeholder="Ingrese observaciones si las hay..."></textarea>
-                    </div>
-                    <button type="submit" class="btn-submit">Registrar Entrada</button>
-                </form>
-            </div>
-            
-            <div id="salida-final" class="content">
-                 <h2>✅ Salida Final</h2>
-                <div class="success-message" id="success-salida-final"></div>
-                <div class="error-message" id="error-salida-final"></div>
-                <form id="form-salida-final">
-                    <div class="form-group">
-                        <label for="clave-salida-final">Clave del Operador:</label>
-                        <input type="text" id="clave-salida-final" required>
-                    </div>
-                    <div class="operator-info" id="info-salida-final" style="display: none;">
-                        <p id="nombre-salida-final"></p>
-                        <p id="habitacion-salida-final"></p>
-                    </div>
-                     <div class="checkbox-group">
-                        <input type="checkbox" id="licencia-devuelta" required>
-                        <label for="licencia-devuelta">Licencia devuelta</label>
-                    </div>
-                    <div class="form-group">
-                        <label for="observaciones-salida">Observaciones:</label>
-                        <textarea id="observaciones-salida" rows="4" placeholder="Ingrese observaciones finales..."></textarea>
-                    </div>
-                    <button type="submit" class="btn-submit">Registrar Salida Final</button>
-                </form>
-            </div>
+            <div id="entrada-inicial" class="content"></div>
+            <div id="salida-intermedia" class="content"></div>
+            <div id="entrada-intermedia" class="content"></div>
+            <div id="salida-final" class="content"></div>
         </div>
 
         <div class="admin-panel" id="admin-panel">
             <h2>🛠️ Panel de Administración</h2>
             <div class="admin-tabs">
-                <button class="admin-tab active" onclick="showAdminTab('usuarios', event)">👥 Gestión de Usuarios</button>
+                <button class="admin-tab" onclick="showAdminTab('usuarios', event)">👥 Gestión de Usuarios</button>
                 <button class="admin-tab" onclick="showAdminTab('operadores', event)">👷 Gestión de Operadores</button>
                 <button class="admin-tab" onclick="showAdminTab('habitaciones', event)">🏠 Gestión de Habitaciones</button>
                 <button class="admin-tab" onclick="showAdminTab('estadisticas', event)">📊 Estadísticas</button>
@@ -589,706 +161,265 @@
             <div class="success-message" id="success-admin"></div>
             <div class="error-message" id="error-admin"></div>
 
-            <div id="admin-usuarios" class="admin-section">
-                <h3>Gestión de Usuarios del Sistema</h3>
-                <form id="form-crear-usuario">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="nuevo-email">Email:</label>
-                            <input type="email" id="nuevo-email" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="nueva-password">Contraseña:</label>
-                            <input type="password" id="nueva-password" required>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label for="tipo-usuario">Tipo de Usuario:</label>
-                        <select id="tipo-usuario" required>
-                            <option value="registro">Registro</option>
-                            <option value="admin">Administrador</option>
-                        </select>
-                    </div>
-                    <button type="submit" class="btn-submit">Crear Usuario</button>
-                </form>
-                <h4>Usuarios Existentes:</h4>
-                <div id="lista-usuarios"></div>
-            </div>
-
-            <div id="admin-operadores" class="admin-section" style="display: none;">
-                 <h3>Gestión de Operadores</h3>
-                <form id="form-operador">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="clave-operador">Clave:</label>
-                            <input type="text" id="clave-operador" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="nombre-operador">Nombre Completo:</label>
-                            <input type="text" id="nombre-operador" required>
-                        </div>
-                    </div>
-                    <button type="submit" class="btn-submit">Agregar/Actualizar Operador</button>
-                </form>
-                 <h4>Operadores Existentes:</h4>
-                <div id="lista-operadores"></div>
-            </div>
-            
-            <div id="admin-habitaciones" class="admin-section" style="display: none;">
-                <h3>Gestión de Habitaciones y Camas</h3>
-                <form id="form-habitacion">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="numero-habitacion">Número de Habitación:</label>
-                            <input type="text" id="numero-habitacion" placeholder="Ej: H101" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="numero-camas">Número de Camas:</label>
-                            <input type="number" id="numero-camas" min="1" max="8" value="2" required>
-                        </div>
-                    </div>
-                    <button type="submit" class="btn-submit">Agregar Habitación</button>
-                </form>
-                <h4>Habitaciones Existentes:</h4>
-                <div id="lista-habitaciones"></div>
-            </div>
-
-            <div id="admin-estadisticas" class="admin-section" style="display: none;">
-                 <h3>Estadísticas y Reportes</h3>
-                <div class="statistics-filters">
-                    <div class="form-group">
-                        <label for="filtro-operador">Operador:</label>
-                        <select id="filtro-operador"><option value="">Todos</option></select>
-                    </div>
-                    <div class="form-group">
-                        <label for="fecha-inicio">Fecha Inicio:</label>
-                        <input type="date" id="fecha-inicio" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="fecha-fin">Fecha Fin:</label>
-                        <input type="date" id="fecha-fin" required>
-                    </div>
-                </div>
-                 <button onclick="generarEstadisticas()" class="btn-submit">Generar Reporte</button>
-                <div id="resultados-estadisticas" style="margin-top: 20px;"></div>
-            </div>
+            <div id="admin-usuarios" class="admin-section"></div>
+            <div id="admin-operadores" class="admin-section"></div>
+            <div id="admin-habitaciones" class="admin-section"></div>
+            <div id="admin-estadisticas" class="admin-section"></div>
         </div>
     </div>
 
     <script>
-        // ¡IMPORTANTE! Reemplaza esta configuración con la de tu proyecto Firebase
+        // --- SECCIÓN DE CONFIGURACIÓN E INICIALIZACIÓN ---
         const firebaseConfig = {
-            apiKey: "TU_API_KEY",
-            authDomain: "TU_AUTH_DOMAIN",
-            databaseURL: "https://TU_PROJECT_ID-default-rtdb.firebaseio.com",
-            projectId: "TU_PROJECT_ID",
-            storageBucket: "TU_PROJECT_ID.appspot.com",
-            messagingSenderId: "TU_MESSAGING_SENDER_ID",
-            appId: "TU_APP_ID"
+            apiKey: "AIzaSyD6TmyUqr4prYMzuCV8kJWlr6lZ9Z_7dvU",
+            authDomain: "control-acceso-a-dormitorios.firebaseapp.com",
+            databaseURL: "https://control-acceso-a-dormitorios-default-rtdb.firebaseio.com",
+            projectId: "control-acceso-a-dormitorios",
+            storageBucket: "control-acceso-a-dormitorios.appspot.com",
+            messagingSenderId: "850849326774",
+            appId: "1:850849326774:web:863509d85da9e4ecfce817",
+            measurementId: "G-JH1E220M7S"
         };
-
-        // Inicializar Firebase
-        firebase.initializeApp(firebaseConfig);
+        let app;
+        try { app = firebase.initializeApp(firebaseConfig); } catch (e) { console.error("Error CRÍTICO al inicializar Firebase.", e); alert("Error de configuración de Firebase (F12)."); }
         const db = firebase.database();
         const auth = firebase.auth();
-
-        // --- Variables Globales y Estado ---
         let currentUserType = '';
         let operadoresData = {};
-
-        // --- MANEJO DE AUTENTICACIÓN Y NAVEGACIÓN ---
-
-        auth.onAuthStateChanged((user) => {
-            if (user) {
-                document.getElementById('current-user').textContent = user.email;
-                document.getElementById('user-info').style.display = 'block';
-                cargarDatosIniciales(); // Cargar datos necesarios al iniciar sesión
-            } else {
-                document.getElementById('user-info').style.display = 'none';
-                showInitialScreen();
-            }
-        });
+        let occupancyChartInstance = null;
         
-        function showInitialScreen() {
-            hideAllScreens();
-            document.getElementById('initial-screen').style.display = 'block';
-        }
+        // --- FUNCIONES DE UTILIDAD Y NAVEGACIÓN ---
+        function showMessage(type, message, context) { const el = document.getElementById(`${type}-${context}`); if (el) { el.textContent = message; el.style.display = 'block'; setTimeout(() => { el.style.display = 'none'; }, 6000); } }
+        function hideMessage(context) { ['success', 'error'].forEach(type => { const el = document.getElementById(`${type}-${context}`); if (el) el.style.display = 'none'; }); }
+        function showInitialScreen() { hideAllScreens(); document.getElementById('initial-screen').style.display = 'block'; }
+        function hideAllScreens() { ['initial-screen', 'login-screen', 'main-system', 'admin-panel'].forEach(id => { const el = document.getElementById(id); if (el) el.style.display = 'none'; }); }
+        function showLogin(type) { currentUserType = type; hideAllScreens(); document.getElementById('login-screen').style.display = 'block'; document.getElementById('login-title').textContent=type==='admin'?'Acceso de Administrador':'Acceso de Registro'; document.getElementById('form-login')?.reset(); hideMessage('login'); }
+        function logout() { auth.signOut(); }
 
-        function showLogin(type) {
-            currentUserType = type;
-            hideAllScreens();
-            document.getElementById('login-screen').style.display = 'block';
-            document.getElementById('login-title').textContent = type === 'admin' ? 'Acceso de Administrador' : 'Acceso de Registro';
-            document.getElementById('form-login').reset();
-            hideMessage('login');
-        }
-
-        function hideAllScreens() {
-            document.getElementById('initial-screen').style.display = 'none';
-            document.getElementById('login-screen').style.display = 'none';
-            document.getElementById('main-system').style.display = 'none';
-            document.getElementById('admin-panel').style.display = 'none';
-        }
-
-        function logout() {
-            auth.signOut().then(() => {
-                showInitialScreen();
-                currentUserType = '';
-            });
-        }
+        // --- LÓGICA DE AUTENTICACIÓN ---
+        auth.onAuthStateChanged((user) => {
+            const userInfoEl = document.getElementById('user-info');
+            if (user) { userInfoEl.style.display = 'block'; document.getElementById('current-user').textContent = user.email; } 
+            else { userInfoEl.style.display = 'none'; showInitialScreen(); }
+        });
 
         document.getElementById('form-login').addEventListener('submit', function(e) {
-            e.preventDefault();
-            hideMessage('login');
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            
+            e.preventDefault(); hideMessage('login');
+            const email = document.getElementById('email').value, password = document.getElementById('password').value;
             auth.signInWithEmailAndPassword(email, password)
                 .then(userCredential => db.ref('usuarios/' + userCredential.user.uid).once('value'))
                 .then(snapshot => {
                     const userData = snapshot.val();
                     if (userData && userData.tipo === currentUserType) {
                         hideAllScreens();
-                        if (currentUserType === 'admin') {
-                            document.getElementById('admin-panel').style.display = 'block';
-                            showAdminTab('usuarios'); // CORRECCIÓN: Mostrar la primera pestaña por defecto
-                        } else {
-                            document.getElementById('main-system').style.display = 'block';
-                            showTab('entrada-inicial'); // CORRECCIÓN: Mostrar la primera pestaña por defecto
-                        }
+                        if (currentUserType === 'admin') { document.getElementById('admin-panel').style.display = 'block'; showAdminTab('usuarios'); } 
+                        else { document.getElementById('main-system').style.display = 'block'; showTab('entrada-inicial'); }
                     } else {
-                        auth.signOut(); // Desloguear si el tipo no es correcto
-                        showMessage('error', 'Acceso denegado. Rol de usuario no válido para este panel.', 'login');
+                        console.log("Fallo la verificación de rol. Datos de la BD:", userData, "Rol requerido:", currentUserType);
+                        auth.signOut();
+                        showMessage('error', `Acceso denegado. El usuario está autenticado pero no tiene el rol de "${currentUserType}" en la base de datos.`, 'login');
                     }
                 })
-                .catch(error => {
-                    showMessage('error', `Error: ${error.message}`, 'login');
-                });
+                .catch(error => { console.error("Error de Login:", error); showMessage('error', `Error en la autenticación: ${error.message}`, 'login'); });
         });
 
-        // --- FUNCIONES DE UTILIDAD (MENSAJES, ETC.) ---
-
-        function showMessage(type, message, context) {
-            const successEl = document.getElementById(`success-${context}`);
-            const errorEl = document.getElementById(`error-${context}`);
-            if (type === 'success') {
-                successEl.textContent = message;
-                successEl.style.display = 'block';
-                errorEl.style.display = 'none';
-                setTimeout(() => successEl.style.display = 'none', 5000);
-            } else {
-                errorEl.textContent = message;
-                errorEl.style.display = 'block';
-                successEl.style.display = 'none';
-                setTimeout(() => errorEl.style.display = 'none', 5000);
+        // --- MANEJO DE PESTAÑAS (TABS) ---
+        function activateTabAndContent(panelClass, tabId, event, templateId) {
+            const panel = document.querySelector(`.${panelClass}`); if (!panel) return;
+            panel.querySelectorAll('.tab, .admin-tab').forEach(t => t.classList.remove('active'));
+            panel.querySelectorAll('.content, .admin-section').forEach(c => { c.innerHTML = ''; c.classList.remove('active'); });
+            const contentEl = panel.querySelector(`#${tabId}`) || panel.querySelector(`#admin-${tabId}`);
+            const templateEl = document.getElementById(templateId);
+            if (contentEl && templateEl) {
+                contentEl.innerHTML = templateEl.innerHTML;
+                if (panelClass === 'main-system') { const queryTemplate = document.getElementById('TPL_QUERY_SECTION'); if (queryTemplate) { contentEl.innerHTML += queryTemplate.innerHTML.replace(/CONTEXT/g, tabId); } }
+                contentEl.classList.add('active');
             }
+            let tabEl = event ? event.currentTarget : panel.querySelector(`[onclick*="'${tabId}'"]`);
+            if(tabEl) tabEl.classList.add('active');
         }
+        function showTab(tabId, event) { const tpl = { 'entrada-inicial': 'TPL_ENTRADA_INICIAL', 'salida-intermedia': 'TPL_SALIDA_INTERMEDIA', 'entrada-intermedia': 'TPL_ENTRADA_INTERMEDIA', 'salida-final': 'TPL_SALIDA_FINAL' }; activateTabAndContent('main-system', tabId, event, tpl[tabId]); attachRegistroListeners(tabId); }
+        function showAdminTab(tabId, event) { const tpl = { 'usuarios': 'TPL_ADMIN_USUARIOS', 'operadores': 'TPL_ADMIN_OPERADORES', 'habitaciones': 'TPL_ADMIN_HABITACIONES', 'estadisticas': 'TPL_ADMIN_ESTADISTICAS' }; activateTabAndContent('admin-panel', tabId, event, tpl[tabId]); attachAdminListeners(tabId); }
         
-        function hideMessage(context) {
-             const successEl = document.getElementById(`success-${context}`);
-             const errorEl = document.getElementById(`error-${context}`);
-             if(successEl) successEl.style.display = 'none';
-             if(errorEl) errorEl.style.display = 'none';
-        }
-
-
-        // --- CARGA DE DATOS INICIALES ---
-        function cargarDatosIniciales() {
-            // Cargar operadores
-            db.ref('operadores').on('value', snapshot => {
-                operadoresData = snapshot.val() || {};
-                 // Poblar filtro de operadores en estadísticas
-                const filtroOperadorSelect = document.getElementById('filtro-operador');
-                filtroOperadorSelect.innerHTML = '<option value="">Todos</option>';
-                for (const clave in operadoresData) {
-                    filtroOperadorSelect.innerHTML += `<option value="${clave}">${clave} - ${operadoresData[clave].nombre}</option>`;
-                }
-            });
-
-            // Cargar habitaciones y actualizar mapa de ocupación en tiempo real
-            db.ref('habitaciones').on('value', snapshot => {
-                const habitaciones = snapshot.val() || {};
-                actualizarMapaOcupacion(habitaciones);
-                poblarHabitacionesDisponibles(habitaciones);
+        // --- LÓGICA DE DATOS Y EVENTOS ---
+        function cargarDatosYAsignarListeners(callback) { const p = [ db.ref('operadores').once('value'), db.ref('habitaciones').once('value') ]; Promise.all(p).then(s => { operadoresData = s[0].val() || {}; const h = s[1].val() || {}; if (callback) callback(h); }); }
+        
+        function attachAdminListeners(tabId) {
+            cargarDatosYAsignarListeners(() => {
+                if (tabId === 'usuarios') { document.getElementById('form-crear-usuario')?.addEventListener('submit', handleCrearUsuario); db.ref('usuarios').on('value', listarUsuarios); } 
+                else if (tabId === 'operadores') { document.getElementById('form-operador')?.addEventListener('submit', handleFormOperador); document.getElementById('btn-importar-excel')?.addEventListener('click', () => document.getElementById('input-excel').click()); document.getElementById('input-excel')?.addEventListener('change', handleImportarOperadores); db.ref('operadores').on('value', listarOperadores); } 
+                else if (tabId === 'habitaciones') { document.getElementById('form-habitacion')?.addEventListener('submit', handleFormHabitacion); document.getElementById('numero-camas')?.addEventListener('input', generarInputsCamas); db.ref('habitaciones').on('value', listarHabitaciones); }
+                else if (tabId === 'estadisticas') { document.getElementById('btn-consulta-general')?.addEventListener('click', handleConsultaGeneral); document.getElementById('btn-generar-grafico')?.addEventListener('click', handleGenerarGrafico); const opSel = document.getElementById('filtro-operador-general'); if (opSel) { opSel.innerHTML = '<option value="">Todos</option>'; for (const c in operadoresData) { opSel.innerHTML += `<option value="${c}">${c} - ${operadoresData[c].nombre}</option>`; } } }
             });
         }
         
-        // --- FUNCIONALIDAD DEL PANEL DE REGISTRO ---
-
-        function showTab(tabId, event) {
-            document.querySelectorAll('.main-system .content').forEach(c => c.classList.remove('active'));
-            document.querySelectorAll('.main-system .tab').forEach(t => t.classList.remove('active'));
-            document.getElementById(tabId).classList.add('active');
-            // CORRECCIÓN: Activar el tab correcto
-            if (event) {
-                event.currentTarget.classList.add('active');
-            } else {
-                document.querySelector(`.main-system .tab[onclick*="'${tabId}'"]`).classList.add('active');
-            }
+        function attachRegistroListeners(tabId) {
+            cargarDatosYAsignarListeners((habitaciones) => {
+                const grid = document.getElementById('rooms-grid'); if (grid) actualizarMapaOcupacion(habitaciones, grid);
+                if (tabId === 'entrada-inicial') { document.getElementById('form-entrada-inicial')?.addEventListener('submit', handleEntradaInicial); document.getElementById('clave-entrada')?.addEventListener('blur', (e) => handleClaveBlur(e.target.value)); const selectHab = document.getElementById('habitacion-entrada'); if (selectHab) poblarHabitacionesDisponibles(habitaciones, selectHab); } 
+                else if (tabId === 'salida-intermedia') { document.getElementById('form-salida-intermedia')?.addEventListener('submit', handleSalidaIntermedia); document.getElementById('clave-salida-int')?.addEventListener('blur', (e) => buscarOperadorActivo(e.target.value, 'salida-intermedia', { requireOcupada: true })); }
+                else if (tabId === 'entrada-intermedia') { document.getElementById('form-entrada-intermedia')?.addEventListener('submit', handleEntradaIntermedia); document.getElementById('clave-entrada-int')?.addEventListener('blur', (e) => buscarOperadorActivo(e.target.value, 'entrada-intermedia', { requireTemporal: true })); }
+                else if (tabId === 'salida-final') { document.getElementById('form-salida-final')?.addEventListener('submit', handleSalidaFinal); document.getElementById('clave-salida-final')?.addEventListener('blur', (e) => buscarOperadorActivo(e.target.value, 'salida-final', { requireOcupada: true })); }
+                const consultaBtn = document.getElementById(`btn-consulta-${tabId}`), operadorSelect = document.getElementById(`filtro-operador-${tabId}`);
+                if (operadorSelect) { operadorSelect.innerHTML = '<option value="">Todos</option>'; for (const clave in operadoresData) { operadorSelect.innerHTML += `<option value="${clave}">${clave} - ${operadoresData[clave].nombre}</option>`; } }
+                if (consultaBtn) { consultaBtn.addEventListener('click', () => handleConsultaRegistros(tabId)); }
+            });
         }
-
-        // --- LÓGICA DE ENTRADA INICIAL ---
         
-        const claveEntradaInput = document.getElementById('clave-entrada');
-        claveEntradaInput.addEventListener('blur', () => {
-            const clave = claveEntradaInput.value.trim().toUpperCase();
-            claveEntradaInput.value = clave;
-            const infoDiv = document.getElementById('info-entrada');
-            const nombreP = document.getElementById('nombre-entrada');
-            if (operadoresData[clave]) {
-                nombreP.textContent = `Nombre: ${operadoresData[clave].nombre}`;
-                infoDiv.style.display = 'block';
-            } else {
-                infoDiv.style.display = 'none';
-                if(clave) showMessage('error', 'Clave de operador no encontrada.', 'entrada-inicial');
-            }
-        });
-
-        function actualizarMapaOcupacion(habitaciones) {
-            const grid = document.getElementById('rooms-grid');
-            grid.innerHTML = '';
-            Object.keys(habitaciones).sort().forEach(numHab => {
-                const hab = habitaciones[numHab];
-                const roomDiv = document.createElement('div');
-                roomDiv.classList.add('room');
-                roomDiv.innerHTML = `<h5>Hab. ${numHab}</h5>`;
-                
-                const bedsDiv = document.createElement('div');
-                bedsDiv.classList.add('room-beds');
-
-                let isAnyAvailable = false;
-                Object.keys(hab.camas).sort().forEach(numCama => {
-                    const cama = hab.camas[numCama];
-                    const bedSpan = document.createElement('span');
-                    bedSpan.classList.add('bed');
-                    bedSpan.classList.add(cama.estado === 'ocupada' ? 'occupied' : 'available');
-                    bedSpan.textContent = numCama;
-                    bedsDiv.appendChild(bedSpan);
-                    if (cama.estado === 'disponible') isAnyAvailable = true;
-                });
-                roomDiv.appendChild(bedsDiv);
-                roomDiv.classList.toggle('available', isAnyAvailable);
-                grid.appendChild(roomDiv);
-            });
-        }
-
-
-        function poblarHabitacionesDisponibles(habitaciones) {
-            const selectHab = document.getElementById('habitacion-entrada');
-            const currentVal = selectHab.value;
-            selectHab.innerHTML = '<option value="">Seleccionar habitación</option>';
-            Object.keys(habitaciones).forEach(numHab => {
-                const camasDisponibles = Object.values(habitaciones[numHab].camas).some(c => c.estado === 'disponible');
-                if (camasDisponibles) {
-                    selectHab.innerHTML += `<option value="${numHab}">${numHab}</option>`;
-                }
-            });
-            selectHab.value = currentVal;
-
-            selectHab.onchange = () => {
-                const selectCama = document.getElementById('cama-entrada');
-                selectCama.innerHTML = '<option value="">Seleccionar cama</option>';
-                const numHabSeleccionada = selectHab.value;
-                if (numHabSeleccionada && habitaciones[numHabSeleccionada]) {
-                    const camas = habitaciones[numHabSeleccionada].camas;
-                    Object.keys(camas).forEach(numCama => {
-                        if (camas[numCama].estado === 'disponible') {
-                             selectCama.innerHTML += `<option value="${numCama}">${numCama}</option>`;
-                        }
-                    });
-                }
-            };
-        }
-
-        document.getElementById('form-entrada-inicial').addEventListener('submit', function(e){
-            e.preventDefault();
-            const clave = document.getElementById('clave-entrada').value.trim();
-            const habitacion = document.getElementById('habitacion-entrada').value;
-            const cama = document.getElementById('cama-entrada').value;
-
-            if (!operadoresData[clave]) {
-                showMessage('error', 'La clave de operador no es válida.', 'entrada-inicial');
-                return;
-            }
-
-            if (!habitacion || !cama) {
-                showMessage('error', 'Debe seleccionar una habitación y una cama.', 'entrada-inicial');
-                return;
-            }
-
+        // --- HANDLERS (ADMIN) ---
+        function handleCrearUsuario(e) { e.preventDefault(); const email = document.getElementById('nuevo-email').value, password = document.getElementById('nueva-password').value, tipo = document.getElementById('tipo-usuario').value, appName = "secondary-" + new Date().getTime(), secondaryApp = firebase.initializeApp(firebaseConfig, appName); secondaryApp.auth().createUserWithEmailAndPassword(email, password).then(cred => db.ref('usuarios/' + cred.user.uid).set({ email, tipo })).then(() => { showMessage('success', 'Usuario creado.', 'admin'); e.target.reset(); return secondaryApp.delete(); }).catch(err => { showMessage('error', `Error al crear: ${err.message}`, 'admin'); secondaryApp.delete(); }); }
+        function handleFormOperador(e) { e.preventDefault(); const clave = document.getElementById('clave-operador').value.trim().toUpperCase(), nombre = document.getElementById('nombre-operador').value.trim(); if(!clave || !nombre) { showMessage('error', 'Ambos campos son requeridos.', 'admin'); return; } db.ref('operadores/' + clave).set({ nombre: nombre }).then(() => { showMessage('success', 'Operador guardado.', 'admin'); e.target.reset(); }).catch(err => showMessage('error', err.message, 'admin')); }
+        function handleFormHabitacion(e) { e.preventDefault(); const numHab = document.getElementById('numero-habitacion').value.trim().toUpperCase(), camaInputs = document.querySelectorAll('.cama-nombre-input'); if (!numHab || camaInputs.length === 0) { showMessage('error', 'Debe especificar el número de habitación y al menos una cama.', 'admin'); return; } const camas = {}, nombresCamas = new Set(); for (const input of camaInputs) { const nombreCama = input.value.trim().toUpperCase(); if (!nombreCama) { showMessage('error', 'Todos los nombres de las camas son requeridos.', 'admin'); return; } if (nombresCamas.has(nombreCama)) { showMessage('error', `El nombre de cama "${nombreCama}" está duplicado.`, 'admin'); return; } nombresCamas.add(nombreCama); camas[nombreCama] = { estado: 'disponible' }; } const numeroCamas = camaInputs.length; db.ref('habitaciones/' + numHab).set({ numeroCamas, camas }).then(() => { showMessage('success', 'Habitación guardada.', 'admin'); e.target.reset(); document.getElementById('camas-inputs-container').innerHTML = ''; }).catch(err => showMessage('error', err.message, 'admin')); }
+        function generarInputsCamas(e) { const cantidad = parseInt(e.target.value, 10), container = document.getElementById('camas-inputs-container'); if (!container) return; container.innerHTML = ''; if (isNaN(cantidad) || cantidad < 1 || cantidad > 20) return; for (let i = 1; i <= cantidad; i++) { const formGroup = document.createElement('div'); formGroup.className = 'form-group'; formGroup.innerHTML = `<label for="cama-nombre-${i}">Nombre/Número de Cama ${i}:</label><input type="text" id="cama-nombre-${i}" class="cama-nombre-input" required>`; container.appendChild(formGroup); } }
+        function handleImportarOperadores(event) { const file = event.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = (e) => { try { const data = new Uint8Array(e.target.result), workbook = XLSX.read(data, {type: 'array'}), firstSheetName = workbook.SheetNames[0], worksheet = workbook.Sheets[firstSheetName], jsonData = XLSX.utils.sheet_to_json(worksheet, {header: 1}); const updates = {}; let count = 0; jsonData.forEach((row, index) => { if (index === 0) return; const clave = row[0]?.toString().trim().toUpperCase(), nombre = row[1]?.toString().trim(); if (clave && nombre) { updates[`/operadores/${clave}`] = { nombre }; count++; } }); if (count > 0) { db.ref().update(updates).then(() => showMessage('success', `${count} operadores importados/actualizados.`, 'admin')).catch(err => showMessage('error', `Error al importar: ${err.message}`, 'admin')); } else { showMessage('error', 'No se encontraron operadores válidos en el archivo.', 'admin'); } } catch (err) { showMessage('error', `Error al procesar el archivo Excel: ${err.message}`, 'admin'); } }; reader.readAsArrayBuffer(file); event.target.value = ''; }
+        
+        // --- HANDLERS (REGISTRO) ---
+        function handleClaveBlur(clave) { const claveUpper = clave.trim().toUpperCase(), infoDiv = document.getElementById('info-entrada'), nombreP = document.getElementById('nombre-entrada'); if (infoDiv) infoDiv.style.display = 'none'; if (operadoresData[claveUpper]) { if (nombreP) nombreP.textContent = `Nombre: ${operadoresData[claveUpper].nombre}`; if (infoDiv) infoDiv.style.display = 'block'; } else { if (claveUpper) showMessage('error', 'Clave de operador no encontrada.', 'entrada-inicial'); } }
+        function handleEntradaInicial(e) { e.preventDefault(); const form = e.target, clave = form.querySelector('#clave-entrada').value.trim().toUpperCase(), habitacion = form.querySelector('#habitacion-entrada').value, cama = form.querySelector('#cama-entrada').value, context = 'entrada-inicial'; if (!operadoresData[clave] || !habitacion || !cama) { showMessage('error', 'Todos los campos son requeridos y la clave debe ser válida.', context); return; } db.ref('estancias').orderByChild('claveOperador').equalTo(clave).once('value', s => { let a = false; s.forEach(c => { if (c.val().estado === 'activa') a = true; }); if (a) { showMessage('error', 'Este operador ya tiene una entrada activa.', context); return; } db.ref(`habitaciones/${habitacion}/camas/${cama}/estado`).once('value', cSnap => { if (cSnap.val() !== 'disponible') { showMessage('error', `La cama ${cama} ya no está disponible.`, context); return; } const nE = { claveOperador: clave, nombreOperador: operadoresData[clave].nombre, habitacion, cama, horaTurno: form.querySelector('#hora-turno').value, horaLevantado: form.querySelector('#hora-levantado').value, licenciaRetenida: form.querySelector('#licencia-retenida').checked, fechaHoraEntradaInicial: new Date().toISOString(), usuarioRegistro: auth.currentUser.email, estado: 'activa' }; const u = {}, k = db.ref('estancias').push().key; u[`/estancias/${k}`] = nE; u[`/habitaciones/${habitacion}/camas/${cama}`] = { estado: 'ocupada', claveOperador: clave }; db.ref().update(u).then(() => { showMessage('success', 'Entrada registrada.', context); form.reset(); document.getElementById('info-entrada').style.display = 'none'; }).catch(err => showMessage('error', `Error: ${err.message}`, context)); }); }); }
+        function handleSalidaIntermedia(e) { e.preventDefault(); const form = e.target, context = 'salida-intermedia', info = document.getElementById(`info-${context}`), estanciaId = info.dataset.estanciaId, motivo = form.querySelector('#motivo-salida').value; if (!estanciaId) { showMessage('error', 'Busque un operador con estancia activa.', context); return; } if (!motivo) { showMessage('error', 'Debe seleccionar un motivo.', context); return; } const habitacion = info.dataset.habitacion, cama = info.dataset.cama, movimiento = { tipo: context, motivo, fechaHora: new Date().toISOString() }; const updates = {}; updates[`/habitaciones/${habitacion}/camas/${cama}/estado`] = 'temporal'; updates[`/estancias/${estanciaId}/movimientos/${db.ref().push().key}`] = movimiento; db.ref().update(updates).then(() => { showMessage('success', 'Salida intermedia registrada.', context); form.reset(); info.style.display = 'none'; }).catch(err => showMessage('error', `Error: ${err.message}`, context)); }
+        function handleEntradaIntermedia(e) { e.preventDefault(); const form = e.target, context = 'entrada-intermedia', info = document.getElementById(`info-${context}`), estanciaId = info.dataset.estanciaId; if (!estanciaId) { showMessage('error', 'Busque un operador con salida previa.', context); return; } const habitacion = info.dataset.habitacion, cama = info.dataset.cama, observaciones = form.querySelector('#observaciones-entrada-int').value, movimiento = { tipo: context, observaciones, fechaHora: new Date().toISOString() }; const updates = {}; updates[`/habitaciones/${habitacion}/camas/${cama}/estado`] = 'ocupada'; updates[`/estancias/${estanciaId}/movimientos/${db.ref().push().key}`] = movimiento; db.ref().update(updates).then(() => { showMessage('success', 'Entrada intermedia registrada.', context); form.reset(); info.style.display = 'none'; }).catch(err => showMessage('error', `Error: ${err.message}`, context)); }
+        function handleSalidaFinal(e) { e.preventDefault(); const form = e.target, context = 'salida-final', info = document.getElementById(`info-${context}`), estanciaId = info.dataset.estanciaId; if (!estanciaId) { showMessage('error', 'Busque un operador con estancia activa para darle salida.', context); return; } if (!form.querySelector('#licencia-devuelta').checked) { showMessage('error', 'Debe confirmar la devolución de la licencia.', context); return; } const habitacion = info.dataset.habitacion, cama = info.dataset.cama; const updates = {}; updates[`/estancias/${estanciaId}/estado`] = 'finalizada'; updates[`/estancias/${estanciaId}/fechaHoraSalidaFinal`] = new Date().toISOString(); updates[`/estancias/${estanciaId}/observacionesSalida`] = form.querySelector('#observaciones-salida').value; updates[`/estancias/${estanciaId}/licenciaDevuelta`] = true; updates[`/habitaciones/${habitacion}/camas/${cama}`] = { estado: 'disponible', claveOperador: null }; db.ref().update(updates).then(() => { showMessage('success', 'Salida final registrada. La cama ha sido liberada.', context); form.reset(); info.style.display = 'none'; }).catch(err => showMessage('error', `Error: ${err.message}`, context)); }
+        
+        // --- FUNCIONES DE BÚSQUEDA Y RENDERIZADO ---
+        function buscarOperadorActivo(clave, context, options) {
+            clave = clave.trim().toUpperCase(); const inputEl = document.getElementById(context)?.querySelector('input[type="text"]'); if (inputEl) inputEl.value = clave;
+            const infoDiv = document.getElementById(`info-${context}`), nombreP = document.getElementById(`nombre-${context}`), habCamaP = document.getElementById(`hab-cama-${context}`);
+            infoDiv.style.display='none'; infoDiv.removeAttribute('data-estancia-id'); infoDiv.removeAttribute('data-habitacion'); infoDiv.removeAttribute('data-cama');
+            hideMessage(context); if(!clave)return;
             db.ref('estancias').orderByChild('claveOperador').equalTo(clave).once('value', snapshot => {
-                let estanciaActiva = false;
-                snapshot.forEach(childSnapshot => {
-                    if (childSnapshot.val().estado === 'activa') {
-                        estanciaActiva = true;
-                    }
-                });
-
-                if (estanciaActiva) {
-                    showMessage('error', 'Este operador ya tiene una entrada activa.', 'entrada-inicial');
-                    return;
-                }
-                
-                const nuevaEstancia = {
-                    claveOperador: clave,
-                    nombreOperador: operadoresData[clave]?.nombre || 'N/A',
-                    habitacion: habitacion,
-                    cama: cama,
-                    horaTurno: document.getElementById('hora-turno').value,
-                    horaLevantado: document.getElementById('hora-levantado').value,
-                    licenciaRetenida: document.getElementById('licencia-retenida').checked,
-                    fechaHoraEntradaInicial: new Date().toISOString(),
-                    usuarioRegistro: auth.currentUser.email,
-                    estado: 'activa',
-                    movimientos: {},
-                    fechaHoraSalidaFinal: null,
-                };
-
-                const nuevaEstanciaRef = db.ref('estancias').push();
-                nuevaEstanciaRef.set(nuevaEstancia)
-                    .then(() => db.ref(`habitaciones/${habitacion}/camas/${cama}`).update({ estado: 'ocupada', claveOperador: clave }))
-                    .then(() => {
-                        showMessage('success', 'Entrada registrada exitosamente.', 'entrada-inicial');
-                        document.getElementById('form-entrada-inicial').reset();
-                        document.getElementById('info-entrada').style.display = 'none';
-                    })
-                    .catch(error => showMessage('error', `Error: ${error.message}`, 'entrada-inicial'));
-            });
-        });
-
-        // --- LÓGICA SALIDAS Y ENTRADAS INTERMEDIAS Y FINAL ---
-        
-        function buscarOperadorActivo(inputId, infoDivId, nombrePId, context) {
-            const input = document.getElementById(inputId);
-            input.addEventListener('blur', () => {
-                const clave = input.value.trim().toUpperCase();
-                input.value = clave;
-                const infoDiv = document.getElementById(infoDivId);
-                const nombreP = document.getElementById(nombrePId);
-                const habitacionP = document.getElementById('habitacion-salida-final');
-                infoDiv.style.display = 'none';
-                hideMessage(context);
-
-                if (!clave) return;
-
-                db.ref('estancias').orderByChild('claveOperador').equalTo(clave).once('value', snapshot => {
-                    let estanciaEncontrada = null;
-                    if(snapshot.exists()) {
-                        snapshot.forEach(child => {
-                            if (child.val().estado === 'activa') {
-                                estanciaEncontrada = child.val();
-                                estanciaEncontrada.id = child.key;
-                            }
-                        });
-                    }
-
-                    if (estanciaEncontrada) {
-                        infoDiv.dataset.estanciaId = estanciaEncontrada.id;
-                        nombreP.textContent = `Nombre: ${estanciaEncontrada.nombreOperador}`;
-                        if(habitacionP) habitacionP.textContent = `Ocupando: Hab. ${estanciaEncontrada.habitacion} - Cama ${estanciaEncontrada.cama}`;
-                        infoDiv.style.display = 'block';
-                    } else {
-                        showMessage('error', 'No se encontró una estancia activa para este operador.', context);
-                    }
+                let estanciaValida = null; snapshot.forEach(child => { if (child.val().estado === 'activa') { estanciaValida = { id: child.key, ...child.val() }; } });
+                if (!estanciaValida) { showMessage('error', 'No se encontró una estancia activa para este operador.', context); return; }
+                const { id, nombreOperador, habitacion, cama } = estanciaValida;
+                const postValidationCheck = (isValid, errorMsg) => { if (isValid) { infoDiv.dataset.estanciaId = id; infoDiv.dataset.habitacion = habitacion; infoDiv.dataset.cama = cama; nombreP.textContent = `Nombre: ${nombreOperador}`; habCamaP.textContent = `Ubicación: Hab. ${habitacion} - Cama ${cama}`; infoDiv.style.display = 'block'; } else { showMessage('error', errorMsg, context); } };
+                db.ref(`/habitaciones/${habitacion}/camas/${cama}/estado`).once('value', camaSnapshot => {
+                    const estadoCama = camaSnapshot.val();
+                    if(options.requireOcupada) { postValidationCheck(estadoCama === 'ocupada', 'La cama del operador no está ocupada (roja). No se puede registrar esta acción.'); }
+                    else if(options.requireTemporal) { postValidationCheck(estadoCama === 'temporal', 'Este operador no tiene una salida intermedia registrada (cama no está en amarillo).'); }
                 });
             });
         }
+        function actualizarMapaOcupacion(habitaciones, grid) { if(!grid)return; grid.innerHTML=''; Object.keys(habitaciones).sort().forEach(numHab => { const hab = habitaciones[numHab], roomDiv = document.createElement('div'); roomDiv.classList.add('room'); roomDiv.innerHTML = `<h5>Hab. ${numHab}</h5>`; const bedsDiv = document.createElement('div'); bedsDiv.classList.add('room-beds'); let isAnyAvailable = false; Object.keys(hab.camas || {}).sort().forEach(camaId => { const cama = hab.camas[camaId], bedSpan = document.createElement('span'); bedSpan.classList.add('bed'); const estadoClass = cama.estado === 'ocupada' ? 'occupied' : cama.estado === 'temporal' ? 'on-leave' : 'available'; bedSpan.classList.add(estadoClass); bedSpan.textContent = camaId; bedsDiv.appendChild(bedSpan); if (cama.estado === 'disponible') isAnyAvailable = true; }); roomDiv.appendChild(bedsDiv); roomDiv.classList.toggle('available', isAnyAvailable); grid.appendChild(roomDiv); }); }
+        function poblarHabitacionesDisponibles(habitaciones, selectHab) { if(!selectHab)return; const currentVal = selectHab.value; selectHab.innerHTML='<option value="">Seleccione habitación</option>'; Object.keys(habitaciones).forEach(numHab => { if (Object.values(habitaciones[numHab].camas || {}).some(c => c.estado === 'disponible')) { selectHab.innerHTML += `<option value="${numHab}">${numHab}</option>`; } }); selectHab.value = currentVal; selectHab.onchange = () => { const selectCama = document.getElementById('cama-entrada'); selectCama.innerHTML = '<option value="">Seleccione cama</option>'; const numHabSel = selectHab.value; if (numHabSel && habitaciones[numHabSel]) { Object.keys(habitaciones[numHabSel].camas).forEach(camaId => { if (habitaciones[numHabSel].camas[camaId].estado === 'disponible') { selectCama.innerHTML += `<option value="${camaId}">${camaId}</option>`; } }); } }; }
+        function listarUsuarios(snapshot) { const lista = document.getElementById('lista-usuarios'); if(!lista) return; lista.innerHTML = ''; if (snapshot.exists()) { snapshot.forEach(child => { const user = child.val(); if(auth.currentUser && auth.currentUser.uid === child.key) return; lista.innerHTML += `<div class="list-item"><span>${user.email} (${user.tipo})</span><button class="btn-delete" onclick="borrarItem('usuarios', '${child.key}', 'usuario')">Borrar</button></div>`; }); } }
+        function listarOperadores(snapshot) { const lista = document.getElementById('lista-operadores'); if(!lista) return; lista.innerHTML = ''; if (snapshot.exists()){ snapshot.forEach(child => { lista.innerHTML += `<div class="list-item"><span>${child.key}: ${child.val().nombre}</span><button class="btn-delete" onclick="borrarItem('operadores', '${child.key}', 'operador')">Borrar</button></div>`; }); } }
+        function listarHabitaciones(snapshot) { const lista = document.getElementById('lista-habitaciones'); if(!lista) return; lista.innerHTML = ''; if (snapshot.exists()) { snapshot.forEach(child => { const camas = Object.keys(child.val().camas || {}).join(', '); lista.innerHTML += `<div class="list-item"><span>Hab. ${child.key} (${child.val().numeroCamas} camas: ${camas})</span><button class="btn-delete" onclick="borrarItem('habitaciones', '${child.key}', 'habitación')">Borrar</button></div>`; }); } }
+        function borrarItem(path, key, nombreItem) { if (confirm(`¿Seguro que desea borrar ${nombreItem} ${key}?`)) { db.ref(`${path}/${key}`).remove().then(() => showMessage('success', `El ${nombreItem} ha sido borrado.`, 'admin')).catch(error => showMessage('error', error.message, 'admin')); } }
         
-        buscarOperadorActivo('clave-salida-int', 'info-salida-int', 'nombre-salida-int', 'salida-intermedia');
-        buscarOperadorActivo('clave-entrada-int', 'info-entrada-int', 'nombre-entrada-int', 'entrada-intermedia');
-        buscarOperadorActivo('clave-salida-final', 'info-salida-final', 'nombre-salida-final', 'salida-final');
-
-        document.getElementById('form-salida-intermedia').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const estanciaId = document.getElementById('info-salida-int').dataset.estanciaId;
-            if (!estanciaId) {
-                 showMessage('error', 'Primero busque un operador con estancia activa.', 'salida-intermedia');
-                 return;
-            }
-            const movimiento = {
-                tipo: 'salida_intermedia',
-                motivo: document.getElementById('motivo-salida').value,
-                fechaHora: new Date().toISOString()
-            };
-            db.ref(`estancias/${estanciaId}/movimientos`).push(movimiento)
-                .then(() => {
-                     showMessage('success', 'Salida intermedia registrada.', 'salida-intermedia');
-                     this.reset();
-                     document.getElementById('info-salida-int').style.display = 'none';
-                     delete document.getElementById('info-salida-int').dataset.estanciaId;
-                })
-                .catch(error => showMessage('error', `Error: ${error.message}`, 'salida-intermedia'));
-        });
+        // --- LÓGICA DE CONSULTAS Y GRÁFICOS ---
+        function handleConsultaRegistros(context) { const filtroOperador = document.getElementById(`filtro-operador-${context}`).value; const fechaInicio = document.getElementById(`fecha-inicio-${context}`).value; const horaInicio = document.getElementById(`hora-inicio-${context}`).value || '00:00'; const fechaFin = document.getElementById(`fecha-fin-${context}`).value; const horaFin = document.getElementById(`hora-fin-${context}`).value || '23:59'; const resultadosDiv = document.getElementById(`resultados-consulta-${context}`); if (!fechaInicio || !fechaFin) { showMessage('error', 'Las fechas de inicio y fin son requeridas.', context); return; } const startDateTime = new Date(`${fechaInicio}T${horaInicio}`).getTime(); const endDateTime = new Date(`${fechaFin}T${horaFin}`).getTime(); resultadosDiv.innerHTML = 'Buscando registros...'; db.ref('estancias').once('value', snapshot => { const resultados = []; snapshot.forEach(childSnapshot => { const estancia = { id: childSnapshot.key, ...childSnapshot.val() }; if (filtroOperador && estancia.claveOperador !== filtroOperador) return; if (context === 'entrada-inicial') { const fechaHora = new Date(estancia.fechaHoraEntradaInicial).getTime(); if (fechaHora >= startDateTime && fechaHora <= endDateTime) resultados.push(estancia); } else if (context === 'salida-final' && estancia.fechaHoraSalidaFinal) { const fechaHora = new Date(estancia.fechaHoraSalidaFinal).getTime(); if (fechaHora >= startDateTime && fechaHora <= endDateTime) resultados.push(estancia); } else if (context === 'salida-intermedia' || context === 'entrada-intermedia') { if (estancia.movimientos) { for(const movId in estancia.movimientos) { const mov = estancia.movimientos[movId]; if (mov.tipo === context) { const fechaHora = new Date(mov.fechaHora).getTime(); if (fechaHora >= startDateTime && fechaHora <= endDateTime) resultados.push({ ...estancia, movimiento: mov }); } } } } }); renderizarTablaConsulta(context, resultados, resultadosDiv); }); }
+        function renderizarTablaConsulta(context, data, container) { if (data.length === 0) { container.innerHTML = '<p>No se encontraron registros.</p>'; return; } let headers = '', rows = ''; const formatDT = (iso) => iso ? new Date(iso).toLocaleString('es-MX') : 'N/A'; if (context === 'entrada-inicial') { headers = '<th>Operador</th><th>Habitación</th><th>Cama</th><th>Fecha y Hora Entrada</th><th>Registró</th>'; rows = data.map(d => `<tr><td>${d.nombreOperador}</td><td>${d.habitacion}</td><td>${d.cama}</td><td>${formatDT(d.fechaHoraEntradaInicial)}</td><td>${d.usuarioRegistro}</td></tr>`).join(''); } else if (context === 'salida-final') { headers = '<th>Operador</th><th>Ubicación</th><th>Fecha y Hora Salida</th><th>Observaciones</th>'; rows = data.map(d => `<tr><td>${d.nombreOperador}</td><td>${d.habitacion}-${d.cama}</td><td>${formatDT(d.fechaHoraSalidaFinal)}</td><td>${d.observacionesSalida || ''}</td></tr>`).join(''); } else if (context === 'salida-intermedia') { headers = '<th>Operador</th><th>Ubicación</th><th>Motivo</th><th>Fecha y Hora Salida</th>'; rows = data.map(d => `<tr><td>${d.nombreOperador}</td><td>${d.habitacion}-${d.cama}</td><td>${d.movimiento.motivo}</td><td>${formatDT(d.movimiento.fechaHora)}</td></tr>`).join(''); } else if (context === 'entrada-intermedia') { headers = '<th>Operador</th><th>Ubicación</th><th>Observaciones</th><th>Fecha y Hora Entrada</th>'; rows = data.map(d => `<tr><td>${d.nombreOperador}</td><td>${d.habitacion}-${d.cama}</td><td>${d.movimiento.observaciones || ''}</td><td>${formatDT(d.movimiento.fechaHora)}</td></tr>`).join(''); } container.innerHTML = `<div class="query-results"><h4>Resultados</h4><table><thead><tr>${headers}</tr></thead><tbody>${rows}</tbody></table></div>`; }
         
-        document.getElementById('form-entrada-intermedia').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const estanciaId = document.getElementById('info-entrada-int').dataset.estanciaId;
-            if (!estanciaId) {
-                 showMessage('error', 'Primero busque un operador con estancia activa.', 'entrada-intermedia');
-                 return;
-            }
-            const movimiento = {
-                tipo: 'entrada_intermedia',
-                observaciones: document.getElementById('observaciones-entrada-int').value,
-                fechaHora: new Date().toISOString()
-            };
-            db.ref(`estancias/${estanciaId}/movimientos`).push(movimiento)
-                .then(() => {
-                     showMessage('success', 'Entrada intermedia registrada.', 'entrada-intermedia');
-                     this.reset();
-                     document.getElementById('info-entrada-int').style.display = 'none';
-                     delete document.getElementById('info-entrada-int').dataset.estanciaId;
-                })
-                .catch(error => showMessage('error', `Error: ${error.message}`, 'entrada-intermedia'));
-        });
-
-        document.getElementById('form-salida-final').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const estanciaId = document.getElementById('info-salida-final').dataset.estanciaId;
-             if (!estanciaId) {
-                 showMessage('error', 'Primero busque un operador con estancia activa.', 'salida-final');
-                 return;
-            }
-
-            db.ref(`estancias/${estanciaId}`).once('value', snapshot => {
-                const estancia = snapshot.val();
-                const updates = {
-                    estado: 'finalizada',
-                    fechaHoraSalidaFinal: new Date().toISOString(),
-                    licenciaDevuelta: document.getElementById('licencia-devuelta').checked,
-                    observacionesSalida: document.getElementById('observaciones-salida').value
-                };
-
-                db.ref(`estancias/${estanciaId}`).update(updates)
-                    .then(() => db.ref(`habitaciones/${estancia.habitacion}/camas/${estancia.cama}`).update({ estado: 'disponible', claveOperador: null }))
-                    .then(() => {
-                        showMessage('success', 'Salida final registrada. La cama ha sido liberada.', 'salida-final');
-                        this.reset();
-                        document.getElementById('info-salida-final').style.display = 'none';
-                        delete document.getElementById('info-salida-final').dataset.estanciaId;
-                    })
-                    .catch(error => showMessage('error', `Error: ${error.message}`, 'salida-final'));
+        function handleConsultaGeneral() {
+            const context = 'admin'; const filtroOperador = document.getElementById('filtro-operador-general').value, filtroMovimiento = document.getElementById('filtro-movimiento-general').value, fechaInicio = document.getElementById('fecha-inicio-general').value, horaInicio = document.getElementById('hora-inicio-general').value || '00:00', fechaFin = document.getElementById('fecha-fin-general').value, horaFin = document.getElementById('hora-fin-general').value || '23:59', resultadosDiv = document.getElementById('resultados-consulta-general');
+            if (!fechaInicio || !fechaFin) { showMessage('error', 'Las fechas de inicio y fin son requeridas.', context); return; }
+            const startDateTime = new Date(`${fechaInicio}T${horaInicio}`).getTime(), endDateTime = new Date(`${fechaFin}T${horaFin}`).getTime();
+            resultadosDiv.innerHTML = 'Buscando registros...';
+            db.ref('estancias').once('value', snapshot => {
+                let eventos = [];
+                snapshot.forEach(childSnapshot => { const estancia = { id: childSnapshot.key, ...childSnapshot.val() }; eventos.push({ tipo: 'entrada-inicial', fechaHora: estancia.fechaHoraEntradaInicial, data: estancia, detalle: `Turno: ${estancia.horaTurno}` }); if (estancia.fechaHoraSalidaFinal) { eventos.push({ tipo: 'salida-final', fechaHora: estancia.fechaHoraSalidaFinal, data: estancia, detalle: estancia.observacionesSalida || '' }); } if (estancia.movimientos) { for(const movId in estancia.movimientos) { const mov = estancia.movimientos[movId]; eventos.push({ tipo: mov.tipo, fechaHora: mov.fechaHora, data: estancia, detalle: mov.motivo || mov.observaciones || '' }); } } });
+                const resultadosFiltrados = eventos.filter(evento => { const fechaHora = new Date(evento.fechaHora).getTime(); const opMatch = !filtroOperador || evento.data.claveOperador === filtroOperador; const movMatch = !filtroMovimiento || evento.tipo === filtroMovimiento; const timeMatch = fechaHora >= startDateTime && fechaHora <= endDateTime; return opMatch && movMatch && timeMatch; });
+                renderizarTablaConsultaGeneral(resultadosFiltrados, resultadosDiv);
             });
-        });
-
-        
-        // --- FUNCIONALIDAD DEL PANEL DE ADMINISTRADOR ---
-
-        function showAdminTab(tabId, event) {
-            document.querySelectorAll('.admin-section').forEach(s => s.style.display = 'none');
-            document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
-            document.getElementById(`admin-${tabId}`).style.display = 'block';
-            // CORRECCIÓN: Activar el tab correcto
-            if(event) {
-                event.currentTarget.classList.add('active');
-            } else {
-                 document.querySelector(`.admin-tab[onclick*="'${tabId}'"]`).classList.add('active');
-            }
-            hideMessage('admin');
         }
 
-        document.getElementById('form-crear-usuario').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const email = document.getElementById('nuevo-email').value;
-            const password = document.getElementById('nueva-password').value;
-            const tipo = document.getElementById('tipo-usuario').value;
-
-            // Se usa una segunda app de Firebase para crear usuarios sin desloguear al admin
-            const appName = "secondary-" + new Date().getTime();
-            const secondaryApp = firebase.initializeApp(firebaseConfig, appName);
+        function renderizarTablaConsultaGeneral(data, container) {
+            if (data.length === 0) { container.innerHTML = '<p>No se encontraron registros con los filtros seleccionados.</p>'; return; }
+            const formatDT = (iso) => iso ? new Date(iso).toLocaleString('es-MX', { year: '2-digit', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : 'N/A';
+            const headers = '<th>Operador</th><th>Hab-Cama</th><th>Tipo Movimiento</th><th>Fecha y Hora</th><th>Detalle/Observación</th><th>Registró</th>';
+            const rows = data.sort((a,b) => new Date(b.fechaHora) - new Date(a.fechaHora)).map(d => { const tipoMovimientoMap = { 'entrada-inicial': 'Entrada Inicial', 'salida-intermedia': 'Salida Intermedia', 'entrada-intermedia': 'Entrada Intermedia', 'salida-final': 'Salida Final' }; return `<tr><td>${d.data.nombreOperador}</td><td>${d.data.habitacion}-${d.data.cama}</td><td>${tipoMovimientoMap[d.tipo] || d.tipo}</td><td>${formatDT(d.fechaHora)}</td><td>${d.detalle}</td><td>${d.data.usuarioRegistro}</td></tr>`; }).join('');
+            container.innerHTML = `<div class="query-results"><h4>Resultados de la Consulta</h4><table><thead><tr>${headers}</tr></thead><tbody>${rows}</tbody></table></div>`;
+        }
+        
+        async function handleGenerarGrafico() {
+            const context = 'admin';
+            const fechaInicio = document.getElementById('fecha-inicio-grafico').value, horaInicio = document.getElementById('hora-inicio-grafico').value || '00:00';
+            const fechaFin = document.getElementById('fecha-fin-grafico').value, horaFin = document.getElementById('hora-fin-grafico').value || '23:59';
+            if (!fechaInicio || !fechaFin) { showMessage('error', 'Las fechas de inicio y fin son requeridas para el gráfico.', context); return; }
             
-            secondaryApp.auth().createUserWithEmailAndPassword(email, password)
-                .then(userCredential => {
-                    const uid = userCredential.user.uid;
-                    return db.ref('usuarios/' + uid).set({ email: email, tipo: tipo });
-                })
-                .then(() => {
-                    showMessage('success', 'Usuario creado exitosamente.', 'admin');
-                    this.reset();
-                    return secondaryApp.delete();
-                })
-                .catch(error => {
-                    showMessage('error', `Error: ${error.message}`, 'admin');
-                    secondaryApp.delete();
-                });
-        });
-        
-        db.ref('usuarios').on('value', snapshot => {
-            const lista = document.getElementById('lista-usuarios');
-            lista.innerHTML = '';
-            if (snapshot.exists()) {
-                snapshot.forEach(child => {
-                    const user = child.val();
-                    const uid = child.key;
-                    lista.innerHTML += `
-                        <div class="list-item" id="user-${uid}">
-                            <span>${user.email} (${user.tipo})</span>
-                            <button class="btn-delete" onclick="borrarUsuario('${uid}', '${user.email}')">Borrar</button>
-                        </div>`;
-                });
-            }
-        });
-        
-        function borrarUsuario(uid, email) {
-             if (auth.currentUser && email === auth.currentUser.email) {
-                 showMessage('error', 'No puede borrar su propio usuario.', 'admin');
-                 return;
-             }
-             if (confirm(`¿Está seguro de que desea borrar al usuario ${email}? Esta acción quitará su acceso y no se puede deshacer.`)) {
-                 // Nota: Borrar usuarios de Auth requiere un backend (Cloud Functions) por seguridad.
-                 // Esta función solo lo borrará de la Realtime Database para quitarle el acceso.
-                 db.ref('usuarios/' + uid).remove()
-                    .then(() => showMessage('success', 'Usuario borrado de la base de datos. El usuario ya no podrá iniciar sesión.', 'admin'))
-                    .catch(error => showMessage('error', error.message, 'admin'));
-             }
-        }
+            const resultsDiv = document.querySelector('#admin-estadisticas .query-section:last-of-type');
+            let msgEl = document.getElementById('grafico-msg');
+            if (!msgEl) { msgEl = document.createElement('p'); msgEl.id = 'grafico-msg'; resultsDiv.appendChild(msgEl); }
+            msgEl.textContent = 'Calculando datos del gráfico, por favor espere...';
 
-        document.getElementById('form-operador').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const clave = document.getElementById('clave-operador').value.trim().toUpperCase();
-            const nombre = document.getElementById('nombre-operador').value.trim();
-            db.ref('operadores/' + clave).set({ nombre: nombre })
-                .then(() => {
-                    showMessage('success', 'Operador guardado.', 'admin');
-                    this.reset();
-                })
-                .catch(error => showMessage('error', error.message, 'admin'));
-        });
-
-        db.ref('operadores').on('value', snapshot => {
-            const lista = document.getElementById('lista-operadores');
-            lista.innerHTML = '';
-            if (snapshot.exists()){
-                snapshot.forEach(child => {
-                    const op = child.val();
-                    const clave = child.key;
-                    lista.innerHTML += `
-                        <div class="list-item">
-                            <span>${clave}: ${op.nombre}</span>
-                            <button class="btn-delete" onclick="borrarOperador('${clave}')">Borrar</button>
-                        </div>`;
-                });
-            }
-        });
-
-        function borrarOperador(clave){
-            if (confirm('¿Seguro que desea borrar este operador?')) {
-                db.ref('operadores/' + clave).remove()
-                .then(() => showMessage('success', 'Operador borrado.', 'admin'))
-                .catch(error => showMessage('error', error.message, 'admin'));
-            }
-        }
-
-        document.getElementById('form-habitacion').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const numHab = document.getElementById('numero-habitacion').value.trim().toUpperCase();
-            const numCamas = parseInt(document.getElementById('numero-camas').value);
-            const camas = {};
-            for(let i = 1; i <= numCamas; i++) {
-                camas[`C${i}`] = { estado: 'disponible' };
-            }
-            db.ref('habitaciones/' + numHab).set({ numeroCamas: numCamas, camas: camas })
-                .then(() => {
-                    showMessage('success', 'Habitación guardada.', 'admin');
-                    this.reset();
-                })
-                .catch(error => showMessage('error', error.message, 'admin'));
-        });
-        
-        db.ref('habitaciones').on('value', snapshot => {
-            const lista = document.getElementById('lista-habitaciones');
-            lista.innerHTML = '';
-            if (snapshot.exists()) {
-                snapshot.forEach(child => {
-                    const hab = child.val();
-                    const numHab = child.key;
-                    lista.innerHTML += `
-                        <div class="list-item">
-                            <span>Hab. ${numHab} (${hab.numeroCamas} camas)</span>
-                            <button class="btn-delete" onclick="borrarHabitacion('${numHab}')">Borrar</button>
-                        </div>`;
-                });
-            }
-        });
-
-        function borrarHabitacion(numHab){
-            if (confirm('¿Seguro que desea borrar esta habitación?')) {
-                 db.ref('habitaciones/' + numHab).remove()
-                .then(() => showMessage('success', 'Habitación borrada.', 'admin'))
-                .catch(error => showMessage('error', error.message, 'admin'));
-            }
-        }
-        
-        function generarEstadisticas() {
-            const resultadosDiv = document.getElementById('resultados-estadisticas');
-            resultadosDiv.innerHTML = 'Generando reporte...';
-
-            const claveOperador = document.getElementById('filtro-operador').value;
-            const fechaInicio = document.getElementById('fecha-inicio').value;
-            const fechaFin = document.getElementById('fecha-fin').value;
-            
-            if (!fechaInicio || !fechaFin) {
-                resultadosDiv.innerHTML = '<p style="color: red;">Por favor, seleccione un rango de fechas.</p>';
-                return;
-            }
-
-            const inicioMs = new Date(fechaInicio + 'T00:00:00').getTime();
-            const finMs = new Date(fechaFin + 'T23:59:59').getTime();
-            const totalHorasRango = (finMs - inicioMs) / (1000 * 60 * 60);
-
+            const [estanciasSnap, habitacionesSnap] = await Promise.all([db.ref('estancias').once('value'), db.ref('habitaciones').once('value')]);
+            const estancias = estanciasSnap.val() || {}, habitaciones = habitacionesSnap.val() || {};
             let totalCamas = 0;
-            db.ref('habitaciones').once('value', habSnapshot => {
-                habSnapshot.forEach(hab => {
-                    totalCamas += hab.val().numeroCamas;
-                });
+            Object.values(habitaciones).forEach(h => totalCamas += h.numeroCamas || 0);
 
-                db.ref('estancias').once('value', estanciasSnapshot => {
-                    let horasOcupadasTotales = 0;
-                    let estanciasFiltradas = [];
+            if (totalCamas === 0) { showMessage('error', 'No hay camas configuradas para generar un gráfico.', context); msgEl.textContent = ''; return; }
 
-                    estanciasSnapshot.forEach(child => {
-                        const estancia = child.val();
-                        
-                        if(claveOperador && estancia.claveOperador !== claveOperador) return;
+            const startDateTime = new Date(`${fechaInicio}T${horaInicio}`), endDateTime = new Date(`${fechaFin}T${horaFin}`);
+            const hourlyData = {}, hour_ms = 3600 * 1000;
 
-                        const entradaMs = new Date(estancia.fechaHoraEntradaInicial).getTime();
-                        const salidaMs = estancia.fechaHoraSalidaFinal ? new Date(estancia.fechaHoraSalidaFinal).getTime() : finMs;
-
-                        if (entradaMs < finMs && salidaMs > inicioMs) {
-                            estanciasFiltradas.push(estancia);
-                            
-                            const inicioCalculo = Math.max(entradaMs, inicioMs);
-                            const finCalculo = Math.min(salidaMs, finMs);
-                            const horasOcupadas = (finCalculo - inicioCalculo) / (1000 * 60 * 60);
-                            
-                            if(horasOcupadas > 0) horasOcupadasTotales += horasOcupadas;
+            for (let time = startDateTime.getTime(); time <= endDateTime.getTime(); time += hour_ms) {
+                let occupiedCount = 0, onLeaveCount = 0;
+                for(const estanciaId in estancias) {
+                    const estancia = estancias[estanciaId];
+                    const entradaTime = new Date(estancia.fechaHoraEntradaInicial).getTime();
+                    const salidaTime = estancia.fechaHoraSalidaFinal ? new Date(estancia.fechaHoraSalidaFinal).getTime() : Infinity;
+                    
+                    if (time >= entradaTime && time < salidaTime) {
+                        let ultimoTipoMovimiento = 'ocupada';
+                        if (estancia.movimientos) {
+                            const relevantMovements = Object.values(estancia.movimientos).filter(m => new Date(m.fechaHora).getTime() <= time).sort((a, b) => new Date(a.fechaHora) - new Date(b.fechaHora));
+                            if (relevantMovements.length > 0 && relevantMovements.pop().tipo === 'salida-intermedia') { ultimoTipoMovimiento = 'temporal'; }
                         }
-                    });
-                    
-                    const totalHorasCamaDisponibles = totalCamas * totalHorasRango;
-                    const porcentajeOcupacion = totalHorasCamaDisponibles > 0 ? (horasOcupadasTotales / totalHorasCamaDisponibles) * 100 : 0;
-                    
-                    let htmlResultados = `
-                        <h4>Resultados del ${fechaInicio} al ${fechaFin}</h4>
-                        <p><strong>Operador:</strong> ${claveOperador || 'Todos'}</p>
-                        <p><strong>Porcentaje de Ocupación de Camas:</strong> ${porcentajeOcupacion.toFixed(2)}%</p>
-                        <hr>
-                        <h5>Estancias en el periodo (${estanciasFiltradas.length}):</h5>
-                    `;
-                    if (estanciasFiltradas.length > 0) {
-                        htmlResultados += '<ul style="list-style-position: inside;">';
-                        estanciasFiltradas.forEach(e => {
-                           htmlResultados += `<li>Operador ${e.claveOperador} en Hab. ${e.habitacion} (Cama ${e.cama}) desde ${new Date(e.fechaHoraEntradaInicial).toLocaleString()} hasta ${e.fechaHoraSalidaFinal ? new Date(e.fechaHoraSalidaFinal).toLocaleString() : 'ACTUAL'}</li>`;
-                        });
-                        htmlResultados += '</ul>';
-                    } else {
-                        htmlResultados += '<p>No se encontraron estancias en este periodo.</p>';
+                        if (ultimoTipoMovimiento === 'ocupada') { occupiedCount++; }
+                        else if (ultimoTipoMovimiento === 'temporal') { onLeaveCount++; }
                     }
-                    
-                    resultadosDiv.innerHTML = htmlResultados;
-                });
+                }
+                const currentHour = new Date(time);
+                const label = `${currentHour.getDate()}/${currentHour.getMonth()+1} ${currentHour.getHours()}:00`;
+                const availableCount = totalCamas - (occupiedCount + onLeaveCount);
+                hourlyData[label] = { occupied: occupiedCount, onLeave: onLeaveCount, available: availableCount };
+            }
+
+            const chartLabels = Object.keys(hourlyData);
+            const occupiedData = chartLabels.map(label => hourlyData[label].occupied);
+            const onLeaveData = chartLabels.map(label => hourlyData[label].onLeave);
+            const availableData = chartLabels.map(label => hourlyData[label].available);
+
+            const ctx = document.getElementById('ocupacionChart')?.getContext('2d');
+            if (!ctx) return;
+            if (occupancyChartInstance) { occupancyChartInstance.destroy(); }
+            occupancyChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: chartLabels,
+                    datasets: [
+                        { label: 'Ocupadas (Rojo)', data: occupiedData, backgroundColor: 'rgba(220, 53, 69, 0.7)' },
+                        { label: 'Salida Temporal (Amarillo)', data: onLeaveData, backgroundColor: 'rgba(255, 193, 7, 0.7)' },
+                        { label: 'Disponibles (Verde)', data: availableData, backgroundColor: 'rgba(40, 167, 69, 0.7)' }
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true, max: totalCamas } },
+                    plugins: { tooltip: { callbacks: {
+                        label: function(context) { return `${context.dataset.label}: ${context.raw}`; },
+                        footer: function(tooltipItems) {
+                            const occupied = tooltipItems.find(item => item.dataset.label.includes('Ocupadas'))?.raw || 0;
+                            const onLeave = tooltipItems.find(item => item.dataset.label.includes('Temporal'))?.raw || 0;
+                            const totalAsignadas = occupied + onLeave;
+                            const percentage = totalCamas > 0 ? ((totalAsignadas / totalCamas) * 100).toFixed(1) : 0;
+                            return `\nTotal Asignadas: ${totalAsignadas} de ${totalCamas}\nOcupación: ${percentage}%`;
+                        }
+                    }}}
+                }
             });
+            msgEl.textContent = '';
         }
+
     </script>
+    
+    <template id="TPL_ADMIN_USUARIOS"><h3>Gestión de Usuarios</h3><form id="form-crear-usuario"><div class="form-row"><div class="form-group"><label for="nuevo-email">Email:</label><input type="email" id="nuevo-email" autocomplete="off" required></div><div class="form-group"><label for="nueva-password">Contraseña:</label><input type="password" id="nueva-password" autocomplete="new-password" required></div></div><div class="form-group"><label for="tipo-usuario">Tipo de Usuario:</label><select id="tipo-usuario" required><option value="registro">Registro</option><option value="admin">Administrador</option></select></div><button type="submit" class="btn-submit">Crear Usuario</button></form><h4>Usuarios Existentes:</h4><div id="lista-usuarios"></div></template>
+    <template id="TPL_ADMIN_OPERADORES"><h3>Gestión de Operadores</h3><form id="form-operador"><div class="form-row"><div class="form-group"><label for="clave-operador">Clave:</label><input type="text" id="clave-operador" required></div><div class="form-group"><label for="nombre-operador">Nombre Completo:</label><input type="text" id="nombre-operador" required></div></div><button type="submit" class="btn-submit">Agregar/Actualizar Operador</button></form><hr><h4>Importar Operadores desde Excel</h4><p style="margin-top:-15px;margin-bottom:15px;font-size:0.9rem;color:#6c757d;">El archivo Excel debe tener la Clave en la columna A y el Nombre en la columna B (la primera fila se ignora).</p><input type="file" id="input-excel" accept=".xlsx, .xls" style="display:none"><button type="button" class="btn-import" id="btn-importar-excel"><i class="fas fa-file-excel"></i> Seleccionar Archivo Excel</button><h4>Operadores Existentes:</h4><div id="lista-operadores"></div></template>
+    <template id="TPL_ADMIN_HABITACIONES"><h3>Gestión de Habitaciones y Camas</h3><form id="form-habitacion"><div class="form-row"><div class="form-group"><label for="numero-habitacion">Número de Habitación:</label><input type="text" id="numero-habitacion" placeholder="Ej: H101" required></div><div class="form-group"><label for="numero-camas">Número de Camas:</label><input type="number" id="numero-camas" min="1" max="20" placeholder="Escriba un número" required></div></div><hr style="border:1px solid #f0f0f0;margin-bottom:25px"><div id="camas-inputs-container"></div><button type="submit" class="btn-submit">Agregar Habitación</button></form><h4>Habitaciones Existentes:</h4><div id="lista-habitaciones"></div></template>
+    <template id="TPL_ADMIN_ESTADISTICAS"><h3>Consulta General de Movimientos</h3><div class="query-section"><div class="filters-grid"><div class="form-group"><label for="filtro-operador-general">Operador:</label><select id="filtro-operador-general"><option value="">Todos</option></select></div><div class="form-group"><label for="filtro-movimiento-general">Tipo de Movimiento:</label><select id="filtro-movimiento-general"><option value="">Todos</option><option value="entrada-inicial">Entrada Inicial</option><option value="salida-intermedia">Salida Intermedia</option><option value="entrada-intermedia">Entrada Intermedia</option><option value="salida-final">Salida Final</option></select></div><div class="form-group"><label for="fecha-inicio-general">Fecha Inicio:</label><input type="date" id="fecha-inicio-general" required></div><div class="form-group"><label for="fecha-fin-general">Fecha Fin:</label><input type="date" id="fecha-fin-general" required></div><div class="form-group"><label for="hora-inicio-general">Hora Inicio:</label><input type="time" id="hora-inicio-general"></div><div class="form-group"><label for="hora-fin-general">Hora Fin:</label><input type="time" id="hora-fin-general"></div></div><button id="btn-consulta-general" class="btn-query">Consultar Movimientos</button><div id="resultados-consulta-general"></div></div><hr><h3>Análisis Gráfico de Ocupación</h3><div class="query-section"><div class="filters-grid"><div class="form-group"><label for="fecha-inicio-grafico">Fecha Inicio:</label><input type="date" id="fecha-inicio-grafico" required></div><div class="form-group"><label for="fecha-fin-grafico">Fecha Fin:</label><input type="date" id="fecha-fin-grafico" required></div><div class="form-group"><label for="hora-inicio-grafico">Hora Inicio:</label><input type="time" id="hora-inicio-grafico"></div><div class="form-group"><label for="hora-fin-grafico">Hora Fin:</label><input type="time" id="hora-fin-grafico"></div></div><button id="btn-generar-grafico" class="btn-query">Generar Gráfico</button><div style="margin-top:20px;position:relative;height:50vh;width:100%;max-width:1000px;"><canvas id="ocupacionChart"></canvas></div></div></template>
+    <template id="TPL_QUERY_SECTION"><hr><div class="query-section"><h4>Consultar Historial de la Sección</h4><div class="filters-grid"><div class="form-group"><label for="filtro-operador-CONTEXT">Operador:</label><select id="filtro-operador-CONTEXT"><option value="">Todos</option></select></div><div class="form-group"><label for="fecha-inicio-CONTEXT">Fecha Inicio:</label><input type="date" id="fecha-inicio-CONTEXT"></div><div class="form-group"><label for="fecha-fin-CONTEXT">Fecha Fin:</label><input type="date" id="fecha-fin-CONTEXT"></div><div class="form-group"><label for="hora-inicio-CONTEXT">Hora Inicio:</label><input type="time" id="hora-inicio-CONTEXT"></div><div class="form-group"><label for="hora-fin-CONTEXT">Hora Fin:</label><input type="time" id="hora-fin-CONTEXT"></div></div><button id="btn-consulta-CONTEXT" class="btn-query">Consultar</button><div id="resultados-consulta-CONTEXT"></div></div></template>
+    <template id="TPL_ENTRADA_INICIAL"><h2>🔑 Entrada Inicial</h2><div class="success-message" id="success-entrada-inicial"></div><div class="error-message" id="error-entrada-inicial"></div><form id="form-entrada-inicial"><div class="form-group"><label for="clave-entrada">Clave del Operador:</label><input type="text" id="clave-entrada" required></div><div class="operator-info" id="info-entrada" style="display:none"><p id="nombre-entrada"></p></div><div class="form-row"><div class="form-group"><label for="habitacion-entrada">Habitación:</label><select id="habitacion-entrada" required><option value="">Seleccione habitación</option></select></div><div class="form-group"><label for="cama-entrada">Cama:</label><select id="cama-entrada" required><option value="">Seleccione cama</option></select></div></div><div class="form-row"><div class="form-group"><label for="hora-turno">Hora de Turno:</label><input type="time" id="hora-turno" required></div><div class="form-group"><label for="hora-levantado">Hora para ser Levantado:</label><input type="time" id="hora-levantado" required></div></div><div class="checkbox-group"><input type="checkbox" id="licencia-retenida" required><label for="licencia-retenida">Licencia retenida</label></div><button type="submit" class="btn-submit">Registrar Entrada</button></form><div class="occupancy-map"><h4>📊 Esquema de Ocupación</h4><div class="rooms-grid" id="rooms-grid"></div></div></template>
+    <template id="TPL_SALIDA_INTERMEDIA"><h2>🚪 Salida Intermedia</h2><div class="success-message" id="success-salida-intermedia"></div><div class="error-message" id="error-salida-intermedia"></div><form id="form-salida-intermedia"><div class="form-group"><label for="clave-salida-int">Clave del Operador:</label><input type="text" id="clave-salida-int" required></div><div class="operator-info" id="info-salida-intermedia" style="display:none"><p id="nombre-salida-intermedia"></p><p id="hab-cama-salida-intermedia"></p></div><div class="form-group"><label for="motivo-salida">Motivo de Salida:</label><select id="motivo-salida" required><option value="">Seleccionar motivo</option><option value="comida">Comida</option><option value="emergencia">Emergencia</option><option value="personal">Asunto Personal</option><option value="trabajo">Trabajo</option><option value="otros">Otros</option></select></div><button type="submit" class="btn-submit">Registrar Salida</button></form><div class="occupancy-map"><h4>📊 Esquema de Ocupación</h4><div class="rooms-grid" id="rooms-grid"></div></div></template>
+    <template id="TPL_ENTRADA_INTERMEDIA"><h2>🔄 Entrada Intermedia</h2><div class="success-message" id="success-entrada-intermedia"></div><div class="error-message" id="error-entrada-intermedia"></div><form id="form-entrada-intermedia"><div class="form-group"><label for="clave-entrada-int">Clave del Operador:</label><input type="text" id="clave-entrada-int" required></div><div class="operator-info" id="info-entrada-intermedia" style="display:none"><p id="nombre-entrada-intermedia"></p><p id="hab-cama-entrada-intermedia"></p></div><div class="form-group"><label for="observaciones-entrada-int">Observaciones:</label><textarea id="observaciones-entrada-int" rows="4" placeholder="Ingrese observaciones si las hay..."></textarea></div><button type="submit" class="btn-submit">Registrar Entrada</button></form><div class="occupancy-map"><h4>📊 Esquema de Ocupación</h4><div class="rooms-grid" id="rooms-grid"></div></div></template>
+    <template id="TPL_SALIDA_FINAL"><h2>✅ Salida Final</h2><div class="success-message" id="success-salida-final"></div><div class="error-message" id="error-salida-final"></div><form id="form-salida-final"><div class="form-group"><label for="clave-salida-final">Clave del Operador:</label><input type="text" id="clave-salida-final" required></div><div class="operator-info" id="info-salida-final" style="display:none"><p id="nombre-salida-final"></p><p id="hab-cama-salida-final"></p></div><div class="form-group"><label for="observaciones-salida">Observaciones Finales:</label><textarea id="observaciones-salida" rows="4"></textarea></div><div class="checkbox-group"><input type="checkbox" id="licencia-devuelta" required><label for="licencia-devuelta">Licencia devuelta</label></div><button type="submit" class="btn-submit">Registrar Salida Final y Liberar Cama</button></form><div class="occupancy-map"><h4>📊 Esquema de Ocupación</h4><div class="rooms-grid" id="rooms-grid"></div></div></template>
 </body>
 </html>
